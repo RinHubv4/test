@@ -290,7 +290,7 @@ end)
 local seedName = ""
 
 -- Seed name input
-local seedInput = Instance.new("TextBox")
+local seedInput = Instance.new(" ")
 seedInput.Size = UDim2.new(0, 160, 0, 30)
 seedInput.PlaceholderText = "Enter Seed Name"
 seedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -310,7 +310,7 @@ seedInput:GetPropertyChangedSignal("Text"):Connect(function()
 end)
 
 -- Spawn Button
-local spawnBtn = Instance.new("")
+local spawnBtn = Instance.new("TextButton")
 spawnBtn.Size = UDim2.new(0, 160, 0, 30)
 spawnBtn.Text = "Spawn Seed"
 spawnBtn.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
