@@ -310,7 +310,7 @@ seedInput:GetPropertyChangedSignal("Text"):Connect(function()
 end)
 
 -- Spawn Button
-local spawnBtn = Instance.new("TextButton")
+local spawnBtn = Instance.new("")
 spawnBtn.Size = UDim2.new(0, 160, 0, 30)
 spawnBtn.Text = "Spawn Seed"
 spawnBtn.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
@@ -341,23 +341,39 @@ spawnBtn.MouseButton1Click:Connect(function()
         return
     end
 
-    local tool = Instance.new("Tool")
-    tool.Name = seedData.SeedName .. " [X" .. (tool:GetAttribute("Quantity") or 0) + 1 .. "]"
-    tool:SetAttribute("ItemType", "Holdable")
-    tool:SetAttribute("SeedName", seedName)
-    tool:SetAttribute("Quantity", (tool:GetAttribute("Quantity") or 0) + 1)
-
-    local seedModel = ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
-    if seedModel then
-        local handle = seedModel:Clone()
-        handle.Name = "Handle"
-        handle.Parent = tool
-    else
-        warn("Seed model not found: " .. seedName)
-        return
+    -- Look for existing tool with this seed in Backpack
+    local backpack = player:WaitForChild("Backpack")
+    local existingTool = nil
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool:GetAttribute("SeedName") == seedName then
+            existingTool = tool
+            break
+        end
     end
 
-    -- Optional: Setup tool properties if needed
+    if existingTool then
+        -- Increase quantity attribute
+        local currentQty = existingTool:GetAttribute("Quantity") or 1
+        existingTool:SetAttribute("Quantity", currentQty + 1)
+        existingTool.Name = seedData.SeedName .. " [X" .. (currentQty + 1) .. "]"
+    else
+        -- Create new tool
+        local tool = Instance.new("Tool")
+        tool.Name = seedData.SeedName .. " [X1]"
+        tool:SetAttribute("ItemType", "Holdable")
+        tool:SetAttribute("SeedName", seedName)
+        tool:SetAttribute("Quantity", 1)
 
-    tool.Parent = player.Backpack
+        local seedModel = ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
+        if seedModel then
+            local handle = seedModel:Clone()
+            handle.Name = "Handle"
+            handle.Parent = tool
+        else
+            warn("Seed model not found: " .. seedName)
+            return
+        end
+
+        tool.Parent = backpack
+    end
 end)
