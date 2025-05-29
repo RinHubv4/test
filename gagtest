@@ -290,9 +290,9 @@ end)
 local seedName = ""
 
 -- Seed name input
-local seedInput = Instance.new(" ")
+local seedInput = Instance.new("TextBox")
 seedInput.Size = UDim2.new(0, 160, 0, 30)
-seedInput.PlaceholderText = "Enter Seed Name"
+seedInput.PlaceholderText = "Enter Seed Name (e.g. Carrot)"
 seedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
 seedInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
 seedInput.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
