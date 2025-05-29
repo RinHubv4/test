@@ -19,8 +19,8 @@ gui.Parent = player:WaitForChild("PlayerGui")
 
 -- Main Frame
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 200, 0, 350) -- Increased height from 260 to 350
-main.Position = UDim2.new(0.5, -100, 0.5, -175) -- Adjust vertical offset accordingly
+main.Size = UDim2.new(0, 200, 0, 260) -- increased height for all elements
+main.Position = UDim2.new(0.5, -100, 0.5, -130)
 main.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
 main.BorderSizePixel = 0
 main.Parent = gui
@@ -37,7 +37,7 @@ stroke.Parent = main
 
 -- Background
 local bg = Instance.new("Frame")
-bg.Size = UDim2.new(1, -10, 1, -100) -- Increased height adjustment to leave room at bottom
+bg.Size = UDim2.new(1, -10, 1, -60) -- adjusted height for content
 bg.Position = UDim2.new(0, 5, 0, 35)
 bg.BackgroundColor3 = Color3.fromRGB(9, 255, 182)
 bg.BorderSizePixel = 0
@@ -98,7 +98,7 @@ exitCorner.Parent = exitBtn
 
 -- Content Frame
 local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(1, -10, 1, -90) -- Increased height from -55 to -90
+contentFrame.Size = UDim2.new(1, -10, 1, -55) -- adjusted height for content
 contentFrame.Position = UDim2.new(0.5, 0, 0, 35)
 contentFrame.AnchorPoint = Vector2.new(0.5, 0)
 contentFrame.BackgroundTransparency = 1
@@ -292,13 +292,12 @@ local seedName = ""
 -- Seed name input
 local seedInput = Instance.new("TextBox")
 seedInput.Size = UDim2.new(0, 160, 0, 30)
-seedInput.PlaceholderText = "Enter Seed Name (e.g. Carrot)"
+seedInput.PlaceholderText = "Enter Seed Name"
 seedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
 seedInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
 seedInput.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
 seedInput.Font = Enum.Font.Gotham
 seedInput.TextSize = 14
-seedInput.Text = ""
 seedInput.ClearTextOnFocus = false
 seedInput.Parent = contentFrame
 
@@ -310,37 +309,55 @@ seedInput:GetPropertyChangedSignal("Text"):Connect(function()
     seedName = seedInput.Text
 end)
 
--- Spawn Seed Button
-local spawnBtn = Instance.new("TextButton")
+-- Spawn Button
+local spawnBtn = Instance.new("")
 spawnBtn.Size = UDim2.new(0, 160, 0, 30)
 spawnBtn.Text = "Spawn Seed"
-spawnBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+spawnBtn.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
 spawnBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 spawnBtn.Font = Enum.Font.GothamBold
 spawnBtn.TextSize = 14
 spawnBtn.Parent = contentFrame
 
-local spawnCorner = Instance.new("UICorner")
-spawnCorner.CornerRadius = UDim.new(0, 6)
-spawnCorner.Parent = spawnBtn
+local spawnBtnCorner = Instance.new("UICorner")
+spawnBtnCorner.CornerRadius = UDim.new(0, 6)
+spawnBtnCorner.Parent = spawnBtn
 
 spawnBtn.MouseButton1Click:Connect(function()
-    if seedName ~= "" then
-        local replicatedSeeds = ReplicatedStorage:FindFirstChild("Seeds")
-        if replicatedSeeds then
-            local seedTemplate = replicatedSeeds:FindFirstChild(seedName)
-            if seedTemplate then
-                for i = 1, multiplier do
-                    local seedClone = seedTemplate:Clone()
-                    seedClone.Parent = player.Backpack
-                end
-            else
-                warn("Seed not found:", seedName)
-            end
-        else
-            warn("Seeds folder not found in ReplicatedStorage")
-        end
-    else
-        warn("Please enter a seed name")
+    if seedName == "" or not seedName then
+        warn("Please enter a valid seed name")
+        return
     end
+
+    local seedDataModule = ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild("SeedData")
+    if not seedDataModule then
+        warn("SeedData module not found in ReplicatedStorage.Data")
+        return
+    end
+
+    local seedData = require(seedDataModule)[seedName]
+    if not seedData then
+        warn("Seed not found: " .. seedName)
+        return
+    end
+
+    local tool = Instance.new("Tool")
+    tool.Name = seedData.SeedName .. " [X" .. (tool:GetAttribute("Quantity") or 0) + 1 .. "]"
+    tool:SetAttribute("ItemType", "Holdable")
+    tool:SetAttribute("SeedName", seedName)
+    tool:SetAttribute("Quantity", (tool:GetAttribute("Quantity") or 0) + 1)
+
+    local seedModel = ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
+    if seedModel then
+        local handle = seedModel:Clone()
+        handle.Name = "Handle"
+        handle.Parent = tool
+    else
+        warn("Seed model not found: " .. seedName)
+        return
+    end
+
+    -- Optional: Setup tool properties if needed
+
+    tool.Parent = player.Backpack
 end)
