@@ -4,377 +4,274 @@ local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Multiplier variable
-local multiplier = 1 -- Change as needed
-
--- Toggle state storage
+local multiplier = 1
 local toggles = {}
-
--- UI Setup
 local player = Players.LocalPlayer
+
+-- GUI
 local gui = Instance.new("ScreenGui")
-gui.ResetOnSpawn = false
 gui.Name = "RinHubUI"
+gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- Main Frame
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 200, 0, 260) -- increased height for all elements
-main.Position = UDim2.new(0.5, -100, 0.5, -130)
-main.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
+main.Size = UDim2.new(0, 340, 0, 360)
+main.Position = UDim2.new(0.5, -170, 0.5, -180)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 main.BorderSizePixel = 0
 main.Parent = gui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = main
-
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(9, 255, 182)
-stroke.Thickness = 2
-stroke.Transparency = 0.3
-stroke.Parent = main
-
--- Background
-local bg = Instance.new("Frame")
-bg.Size = UDim2.new(1, -10, 1, -60) -- adjusted height for content
-bg.Position = UDim2.new(0, 5, 0, 35)
-bg.BackgroundColor3 = Color3.fromRGB(9, 255, 182)
-bg.BorderSizePixel = 0
-bg.Parent = main
-
-local bgCorner = Instance.new("UICorner")
-bgCorner.CornerRadius = UDim.new(0, 6)
-bgCorner.Parent = bg
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+local stroke = Instance.new("UIStroke", main)
+stroke.Color = Color3.fromRGB(60, 60, 60)
+stroke.Thickness = 1
 
 -- Title Bar
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 30)
+titleBar.Size = UDim2.new(1, 0, 0, 35)
 titleBar.BackgroundTransparency = 1
 titleBar.Parent = main
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -60, 1, 0)
 title.Position = UDim2.new(0, 10, 0, 0)
-title.BackgroundTransparency = 1
 title.Text = "Rin Hub"
-title.TextColor3 = Color3.fromRGB(0, 0, 0)
-title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.GothamBold
+title.TextSize = 16
 title.TextXAlignment = Enum.TextXAlignment.Left
+title.BackgroundTransparency = 1
 title.Parent = titleBar
 
 -- Minimize Button
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
-minimizeBtn.Position = UDim2.new(1, -55, 0, 2)
+minimizeBtn.Position = UDim2.new(1, -55, 0, 5)
 minimizeBtn.AnchorPoint = Vector2.new(1, 0)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
-minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 minimizeBtn.Text = "_"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 minimizeBtn.Font = Enum.Font.GothamBold
 minimizeBtn.TextSize = 18
 minimizeBtn.Parent = titleBar
-
-local minCorner = Instance.new("UICorner")
-minCorner.CornerRadius = UDim.new(0, 6)
-minCorner.Parent = minimizeBtn
+Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 4)
 
 -- Exit Button
 local exitBtn = Instance.new("TextButton")
 exitBtn.Size = UDim2.new(0, 25, 0, 25)
-exitBtn.Position = UDim2.new(1, -25, 0, 2)
+exitBtn.Position = UDim2.new(1, -25, 0, 5)
 exitBtn.AnchorPoint = Vector2.new(1, 0)
-exitBtn.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
-exitBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 exitBtn.Text = "X"
+exitBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+exitBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 exitBtn.Font = Enum.Font.GothamBold
 exitBtn.TextSize = 14
 exitBtn.Parent = titleBar
+Instance.new("UICorner", exitBtn).CornerRadius = UDim.new(0, 4)
 
-local exitCorner = Instance.new("UICorner")
-exitCorner.CornerRadius = UDim.new(0, 6)
-exitCorner.Parent = exitBtn
+-- Tab Buttons Frame
+local tabButtons = Instance.new("Frame")
+tabButtons.Size = UDim2.new(1, -20, 0, 30)
+tabButtons.Position = UDim2.new(0, 10, 0, 40)
+tabButtons.BackgroundTransparency = 1
+tabButtons.Parent = main
 
--- Content Frame
-local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(1, -10, 1, -55) -- adjusted height for content
-contentFrame.Position = UDim2.new(0.5, 0, 0, 35)
-contentFrame.AnchorPoint = Vector2.new(0.5, 0)
-contentFrame.BackgroundTransparency = 1
-contentFrame.Parent = main
+local tabLayout = Instance.new("UIListLayout", tabButtons)
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Padding = UDim.new(0, 10)
 
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 10)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-layout.Parent = contentFrame
+-- Content Container
+local contentContainer = Instance.new("Frame")
+contentContainer.Size = UDim2.new(1, -20, 1, -80)
+contentContainer.Position = UDim2.new(0, 10, 0, 75)
+contentContainer.BackgroundTransparency = 1
+contentContainer.Parent = main
 
--- Username Input Field
-local usernameInput = Instance.new("TextBox")
-usernameInput.Size = UDim2.new(0, 160, 0, 30)
-usernameInput.PlaceholderText = "Enter Username"
-usernameInput.TextColor3 = Color3.fromRGB(0, 0, 0)
-usernameInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
-usernameInput.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
-usernameInput.Font = Enum.Font.Gotham
-usernameInput.TextSize = 14
-usernameInput.Text = ""
-usernameInput.ClearTextOnFocus = false
-usernameInput.Parent = contentFrame
+-- Tabs (Spawner & Duplicate)
+local spawnerTab = Instance.new("Frame")
+spawnerTab.Size = UDim2.new(1, 0, 1, 0)
+spawnerTab.BackgroundTransparency = 1
+spawnerTab.Visible = true
+spawnerTab.Parent = contentContainer
 
-local inputCorner = Instance.new("UICorner")
-inputCorner.CornerRadius = UDim.new(0, 6)
-inputCorner.Parent = usernameInput
+local duplicateTab = Instance.new("Frame")
+duplicateTab.Size = UDim2.new(1, 0, 1, 0)
+duplicateTab.BackgroundTransparency = 1
+duplicateTab.Visible = false
+duplicateTab.Parent = contentContainer
 
--- Toggle Function
-local function makeToggle(text, key)
-    local base = Instance.new("Frame")
-    base.Size = UDim2.new(0, 160, 0, 30)
-    base.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
-    base.BorderSizePixel = 0
-    base.Parent = contentFrame
+local function createTabButton(name, targetFrame)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 150, 1, 0)
+	btn.Text = name
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.Parent = tabButtons
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
-    local baseCorner = Instance.new("UICorner")
-    baseCorner.CornerRadius = UDim.new(0, 6)
-    baseCorner.Parent = base
-
-    local txt = Instance.new("TextLabel")
-    txt.Size = UDim2.new(1, -60, 1, 0)
-    txt.Position = UDim2.new(0, 10, 0, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = text
-    txt.TextColor3 = Color3.fromRGB(0, 0, 0)
-    txt.TextSize = 14
-    txt.Font = Enum.Font.Gotham
-    txt.TextXAlignment = Enum.TextXAlignment.Left
-    txt.Parent = base
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 40, 0, 20)
-    btn.Position = UDim2.new(1, -10, 0.5, 0)
-    btn.AnchorPoint = Vector2.new(1, 0.5)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    btn.Text = ""
-    btn.Parent = base
-
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(1, 0)
-    btnCorner.Parent = btn
-
-    local dot = Instance.new("Frame")
-    dot.Size = UDim2.new(0, 16, 0, 16)
-    dot.Position = UDim2.new(0, 2, 0.5, -8)
-    dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    dot.Parent = btn
-
-    local dotCorner = Instance.new("UICorner")
-    dotCorner.CornerRadius = UDim.new(1, 0)
-    dotCorner.Parent = dot
-
-    local on = false
-    toggles[key] = on
-
-    btn.MouseButton1Click:Connect(function()
-        on = not on
-        toggles[key] = on
-        TS:Create(btn, TweenInfo.new(0.2), {
-            BackgroundColor3 = on and Color3.fromRGB(0, 255, 127) or Color3.fromRGB(0, 0, 0)
-        }):Play()
-        TS:Create(dot, TweenInfo.new(0.2), {
-            Position = on and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-        }):Play()
-    end)
+	btn.MouseButton1Click:Connect(function()
+		for _, tab in pairs(contentContainer:GetChildren()) do
+			if tab:IsA("Frame") then tab.Visible = false end
+		end
+		targetFrame.Visible = true
+	end)
 end
 
--- Add Auto Gift toggle
-makeToggle("Auto Gift", "AutoGift")
+createTabButton("Spawner", spawnerTab)
+createTabButton("Duplicate", duplicateTab)
 
--- Create Button Utility
-local function createButton(text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 160, 0, 30)
-    button.Text = text
-    button.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
-    button.TextColor3 = Color3.fromRGB(0, 0, 0)
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 14
-    button.Parent = contentFrame
+-- Spawner Tab Content
+local seedInput = Instance.new("TextBox")
+seedInput.Size = UDim2.new(0, 300, 0, 30)
+seedInput.PlaceholderText = "Enter Seed Name"
+seedInput.Text = ""
+seedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+seedInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+seedInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+seedInput.Font = Enum.Font.Gotham
+seedInput.TextSize = 14
+seedInput.ClearTextOnFocus = false
+seedInput.Parent = spawnerTab
+Instance.new("UICorner", seedInput).CornerRadius = UDim.new(0, 6)
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = button
+local spawnBtn = Instance.new("TextButton")
+spawnBtn.Size = UDim2.new(0, 300, 0, 30)
+spawnBtn.Position = UDim2.new(0, 0, 0, 40)
+spawnBtn.Text = "Spawn Seed"
+spawnBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+spawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+spawnBtn.Font = Enum.Font.GothamBold
+spawnBtn.TextSize = 14
+spawnBtn.Parent = spawnerTab
+Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 6)
 
-    button.MouseButton1Click:Connect(callback)
-end
+spawnBtn.MouseButton1Click:Connect(function()
+	local seedName = seedInput.Text
+	if seedName == "" then return warn("Invalid seed name") end
 
--- Duplicate Equipped Tool Button
-createButton("Duplicate", function()
-    local character = player.Character
-    if character then
-        local tool = character:FindFirstChildOfClass("Tool")
-        if tool and not tostring(tool):match("Seed") then
-            for i = 1, multiplier do
-                local clone = tool:Clone()
-                clone.Parent = player.Backpack
-            end
-        end
-    end
+	local seedDataModule = ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild("SeedData")
+	if not seedDataModule then return warn("SeedData module missing") end
+
+	local seedData = require(seedDataModule)[seedName]
+	if not seedData then return warn("Seed not found: " .. seedName) end
+
+	local backpack = player:WaitForChild("Backpack")
+	local existingTool = nil
+
+	for _, tool in pairs(backpack:GetChildren()) do
+		if tool:IsA("Tool") and tool:GetAttribute("SeedName") == seedName then
+			existingTool = tool
+			break
+		end
+	end
+
+	if existingTool then
+		local qty = existingTool:GetAttribute("Quantity") or 1
+		existingTool:SetAttribute("Quantity", qty + 1)
+		existingTool.Name = seedData.SeedName .. " [X" .. (qty + 1) .. "]"
+	else
+		local tool = Instance.new("Tool")
+		tool.Name = seedData.SeedName .. " [X1]"
+		tool:SetAttribute("ItemType", "Holdable")
+		tool:SetAttribute("SeedName", seedName)
+		tool:SetAttribute("Quantity", 1)
+
+		local seedModel = ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
+		if not seedModel then return warn("Seed model not found") end
+
+		local handle = seedModel:Clone()
+		handle.Name = "Handle"
+		handle.Parent = tool
+
+		tool.Parent = backpack
+	end
+end)
+
+-- Duplicate Tab Content
+local duplicateBtn = Instance.new("TextButton")
+duplicateBtn.Size = UDim2.new(0, 300, 0, 30)
+duplicateBtn.Text = "Duplicate Equipped Tool"
+duplicateBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+duplicateBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+duplicateBtn.Font = Enum.Font.GothamBold
+duplicateBtn.TextSize = 14
+duplicateBtn.Parent = duplicateTab
+Instance.new("UICorner", duplicateBtn).CornerRadius = UDim.new(0, 6)
+
+duplicateBtn.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if not character then return end
+
+	local tool = character:FindFirstChildOfClass("Tool")
+	if tool and not tostring(tool):match("Seed") then
+		for i = 1, multiplier do
+			local clone = tool:Clone()
+			clone.Parent = player.Backpack
+		end
+	end
 end)
 
 -- Minimize
 local minimized = false
 local originalSize = main.Size
-local minimizedSize = UDim2.new(0, 200, 0, 30)
+local minimizedSize = UDim2.new(0, 340, 0, 35)
 
 minimizeBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    TS:Create(main, TweenInfo.new(0.3), {
-        Size = minimized and minimizedSize or originalSize
-    }):Play()
-    contentFrame.Visible = not minimized
-    bg.Visible = not minimized
+	minimized = not minimized
+	TS:Create(main, TweenInfo.new(0.3), {
+		Size = minimized and minimizedSize or originalSize
+	}):Play()
+	for _, child in ipairs(main:GetChildren()) do
+		if child ~= titleBar then
+			child.Visible = not minimized
+		end
+	end
 end)
 
 -- Exit
 exitBtn.MouseButton1Click:Connect(function()
-    TS:Create(main, TweenInfo.new(0.2), {
-        Size = UDim2.new(0, 0, 0, 0),
-        Position = UDim2.new(0.5, 0, 0.5, 0)
-    }):Play()
-    task.wait(0.2)
-    gui:Destroy()
+	TS:Create(main, TweenInfo.new(0.2), {
+		Size = UDim2.new(0, 0, 0, 0),
+		Position = UDim2.new(0.5, 0, 0.5, 0)
+	}):Play()
+	task.wait(0.2)
+	gui:Destroy()
 end)
 
--- Dragging (mobile + desktop support)
+-- Dragging support
 local dragging, dragInput, dragStart, startPos
 
 local function update(input)
-    local delta = input.Position - dragStart
-    main.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
+	local delta = input.Position - dragStart
+	main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+		startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
 titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = main.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = main.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
 end)
 
 titleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
 end)
 
 UIS.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
-
--- Seed Spawner UI Elements
-
-local seedName = ""
-
--- Seed name input
-local seedInput = Instance.new("TextBox")
-seedInput.Size = UDim2.new(0, 160, 0, 30)
-seedInput.PlaceholderText = "Enter Seed Name"
-seedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
-seedInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
-seedInput.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
-seedInput.Font = Enum.Font.Gotham
-seedInput.TextSize = 14
-seedInput.Text = ""
-seedInput.ClearTextOnFocus = false
-seedInput.Parent = contentFrame
-
-local seedInputCorner = Instance.new("UICorner")
-seedInputCorner.CornerRadius = UDim.new(0, 6)
-seedInputCorner.Parent = seedInput
-
-seedInput:GetPropertyChangedSignal("Text"):Connect(function()
-    seedName = seedInput.Text
-end)
-
--- Spawn Button
-local spawnBtn = Instance.new("TextButton")
-spawnBtn.Size = UDim2.new(0, 160, 0, 30)
-spawnBtn.Text = "Spawn Seed"
-spawnBtn.BackgroundColor3 = Color3.fromRGB(3, 244, 202)
-spawnBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-spawnBtn.Font = Enum.Font.GothamBold
-spawnBtn.TextSize = 14
-spawnBtn.Parent = contentFrame
-
-local spawnBtnCorner = Instance.new("UICorner")
-spawnBtnCorner.CornerRadius = UDim.new(0, 6)
-spawnBtnCorner.Parent = spawnBtn
-
-spawnBtn.MouseButton1Click:Connect(function()
-    if seedName == "" or not seedName then
-        warn("Please enter a valid seed name")
-        return
-    end
-
-    local seedDataModule = ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild("SeedData")
-    if not seedDataModule then
-        warn("SeedData module not found in ReplicatedStorage.Data")
-        return
-    end
-
-    local seedData = require(seedDataModule)[seedName]
-    if not seedData then
-        warn("Seed not found: " .. seedName)
-        return
-    end
-
-    -- Look for existing tool with this seed in Backpack
-    local backpack = player:WaitForChild("Backpack")
-    local existingTool = nil
-    for _, tool in pairs(backpack:GetChildren()) do
-        if tool:IsA("Tool") and tool:GetAttribute("SeedName") == seedName then
-            existingTool = tool
-            break
-        end
-    end
-
-    if existingTool then
-        -- Increase quantity attribute
-        local currentQty = existingTool:GetAttribute("Quantity") or 1
-        existingTool:SetAttribute("Quantity", currentQty + 1)
-        existingTool.Name = seedData.SeedName .. " [X" .. (currentQty + 1) .. "]"
-    else
-        -- Create new tool
-        local tool = Instance.new("Tool")
-        tool.Name = seedData.SeedName .. " [X1]"
-        tool:SetAttribute("ItemType", "Holdable")
-        tool:SetAttribute("SeedName", seedName)
-        tool:SetAttribute("Quantity", 1)
-
-        local seedModel = ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
-        if seedModel then
-            local handle = seedModel:Clone()
-            handle.Name = "Handle"
-            handle.Parent = tool
-        else
-            warn("Seed model not found: " .. seedName)
-            return
-        end
-
-        tool.Parent = backpack
-    end
+	if input == dragInput and dragging then
+		update(input)
+	end
 end)
