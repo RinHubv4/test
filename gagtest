@@ -17,14 +17,13 @@ local darkInner = Color3.fromRGB(40, 40, 40)
 local darkGreen = Color3.fromRGB(34, 139, 34)
 local textColor = Color3.fromRGB(255, 255, 255)
 
--- Main Frame
+-- Main Frame (Height increased to 400)
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 220, 0, 300)
-main.Position = UDim2.new(0.5, -110, 0.5, -150)
+main.Size = UDim2.new(0, 220, 0, 400)
+main.Position = UDim2.new(0.5, -110, 0.5, -200)
 main.BackgroundColor3 = darkBG
 main.BorderSizePixel = 0
 main.Parent = gui
-
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
 -- Title Bar
@@ -77,9 +76,8 @@ tabHolder.Position = UDim2.new(0, 10, 0, 35)
 tabHolder.BackgroundTransparency = 1
 tabHolder.Parent = main
 
--- Duplicate Tab Button
 local duplicateTabBtn = Instance.new("TextButton")
-duplicateTabBtn.Size = UDim2.new(0.33, -7, 1, 0)
+duplicateTabBtn.Size = UDim2.new(1/3, -7, 1, 0)
 duplicateTabBtn.Position = UDim2.new(0, 0, 0, 0)
 duplicateTabBtn.BackgroundColor3 = darkGreen
 duplicateTabBtn.Text = "Duplicate"
@@ -89,10 +87,9 @@ duplicateTabBtn.TextSize = 14
 duplicateTabBtn.Parent = tabHolder
 Instance.new("UICorner", duplicateTabBtn).CornerRadius = UDim.new(0, 6)
 
--- Spawner Tab Button
 local spawnerTabBtn = Instance.new("TextButton")
-spawnerTabBtn.Size = UDim2.new(0.33, -7, 1, 0)
-spawnerTabBtn.Position = UDim2.new(0.33, 0, 0, 0)
+spawnerTabBtn.Size = UDim2.new(1/3, -7, 1, 0)
+spawnerTabBtn.Position = UDim2.new(1/3, 5, 0, 0)
 spawnerTabBtn.BackgroundColor3 = darkGreen
 spawnerTabBtn.Text = "Spawner"
 spawnerTabBtn.Font = Enum.Font.GothamBold
@@ -101,10 +98,9 @@ spawnerTabBtn.TextSize = 14
 spawnerTabBtn.Parent = tabHolder
 Instance.new("UICorner", spawnerTabBtn).CornerRadius = UDim.new(0, 6)
 
--- Pet Spawner Tab Button (NEW)
 local petSpawnerTabBtn = Instance.new("TextButton")
-petSpawnerTabBtn.Size = UDim2.new(0.33, -7, 1, 0)
-petSpawnerTabBtn.Position = UDim2.new(0.66, 0, 0, 0)
+petSpawnerTabBtn.Size = UDim2.new(1/3, -7, 1, 0)
+petSpawnerTabBtn.Position = UDim2.new(2/3, 10, 0, 0)
 petSpawnerTabBtn.BackgroundColor3 = darkGreen
 petSpawnerTabBtn.Text = "Pet Spawner"
 petSpawnerTabBtn.Font = Enum.Font.GothamBold
@@ -113,28 +109,24 @@ petSpawnerTabBtn.TextSize = 14
 petSpawnerTabBtn.Parent = tabHolder
 Instance.new("UICorner", petSpawnerTabBtn).CornerRadius = UDim.new(0, 6)
 
--- Content Frames
-
--- Duplicate Frame
+-- Content Frames (Height increased to 300)
 local duplicateFrame = Instance.new("Frame")
-duplicateFrame.Size = UDim2.new(1, -20, 0, 210)
+duplicateFrame.Size = UDim2.new(1, -20, 0, 300)
 duplicateFrame.Position = UDim2.new(0, 10, 0, 70)
 duplicateFrame.BackgroundColor3 = darkInner
 duplicateFrame.Visible = true
 duplicateFrame.Parent = main
 Instance.new("UICorner", duplicateFrame).CornerRadius = UDim.new(0, 6)
 
--- Spawner Frame
 local spawnerFrame = duplicateFrame:Clone()
 spawnerFrame.Visible = false
 spawnerFrame.Parent = main
 
--- Pet Spawner Frame (NEW)
 local petSpawnerFrame = duplicateFrame:Clone()
 petSpawnerFrame.Visible = false
 petSpawnerFrame.Parent = main
 
--- -- Duplicate Tab Content --
+-- Duplicate Button
 local duplicateBtn = Instance.new("TextButton")
 duplicateBtn.Size = UDim2.new(1, -20, 0, 40)
 duplicateBtn.Position = UDim2.new(0, 10, 0, 10)
@@ -157,7 +149,7 @@ duplicateBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- -- Spawner Tab Content --
+-- Spawner UI
 local seedInput = Instance.new("TextBox")
 seedInput.Size = UDim2.new(1, -20, 0, 30)
 seedInput.Position = UDim2.new(0, 10, 0, 10)
@@ -222,31 +214,48 @@ spawnBtn.MouseButton1Click:Connect(function()
 	tool.Parent = backpack
 end)
 
--- -- Pet Spawner Tab Content (NEW) --
+-- Pet Spawner UI
 local petNameInput = Instance.new("TextBox")
 petNameInput.Size = UDim2.new(1, -20, 0, 30)
 petNameInput.Position = UDim2.new(0, 10, 0, 10)
 petNameInput.PlaceholderText = "Enter Pet Name"
 petNameInput.TextColor3 = textColor
-petNameInput.BackgroundColor3 = darkBG
+petNameInput.BackgroundColor3 = darkInner
 petNameInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
 petNameInput.Font = Enum.Font.Gotham
 petNameInput.TextSize = 14
+petNameInput.Text = ""
 petNameInput.ClearTextOnFocus = false
 petNameInput.Parent = petSpawnerFrame
 Instance.new("UICorner", petNameInput).CornerRadius = UDim.new(0, 6)
 
-local petWeightInput = petNameInput:Clone()
+local petWeightInput = Instance.new("TextBox")
+petWeightInput.Size = UDim2.new(1, -20, 0, 30)
 petWeightInput.Position = UDim2.new(0, 10, 0, 50)
 petWeightInput.PlaceholderText = "Enter Pet Weight"
+petWeightInput.TextColor3 = textColor
+petWeightInput.BackgroundColor3 = darkInner
+petWeightInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
+petWeightInput.Font = Enum.Font.Gotham
+petWeightInput.TextSize = 14
 petWeightInput.Text = ""
+petWeightInput.ClearTextOnFocus = false
 petWeightInput.Parent = petSpawnerFrame
+Instance.new("UICorner", petWeightInput).CornerRadius = UDim.new(0, 6)
 
-local petAgeInput = petNameInput:Clone()
+local petAgeInput = Instance.new("TextBox")
+petAgeInput.Size = UDim2.new(1, -20, 0, 30)
 petAgeInput.Position = UDim2.new(0, 10, 0, 90)
 petAgeInput.PlaceholderText = "Enter Pet Age"
+petAgeInput.TextColor3 = textColor
+petAgeInput.BackgroundColor3 = darkInner
+petAgeInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
+petAgeInput.Font = Enum.Font.Gotham
+petAgeInput.TextSize = 14
 petAgeInput.Text = ""
+petAgeInput.ClearTextOnFocus = false
 petAgeInput.Parent = petSpawnerFrame
+Instance.new("UICorner", petAgeInput).CornerRadius = UDim.new(0, 6)
 
 local spawnPetBtn = Instance.new("TextButton")
 spawnPetBtn.Size = UDim2.new(1, -20, 0, 40)
@@ -261,83 +270,89 @@ Instance.new("UICorner", spawnPetBtn).CornerRadius = UDim.new(0, 6)
 
 spawnPetBtn.MouseButton1Click:Connect(function()
 	local petName = petNameInput.Text
-	local petWeight = tonumber(petWeightInput.Text) or 1
-	local petAge = tonumber(petAgeInput.Text) or 1
-	
-	if petName == "" then
-		warn("Pet name is required")
+	local petWeight = tonumber(petWeightInput.Text)
+	local petAge = tonumber(petAgeInput.Text)
+	if not petName or petName == "" or not petWeight or not petAge then
+		warn("Invalid pet info")
 		return
 	end
-	
-	local petDataModule = ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild("PetRegistry")
-	if not petDataModule then
-		warn("PetRegistry not found in ReplicatedStorage.Data")
-		return
-	end
-	
-	local petList = require(petDataModule).PetList
-	local petData = petList and petList[petName]
-	if not petData then
-		warn("Pet not found: " .. petName)
-		return
-	end
-	
-	-- TODO: Replace this with actual spawn logic
-	print("Spawning pet: " .. petName .. ", Weight: " .. petWeight .. ", Age: " .. petAge)
-end)
 
--- Tab button functionality
-duplicateTabBtn.MouseButton1Click:Connect(function()
-	duplicateFrame.Visible = true
-	spawnerFrame.Visible = false
-	petSpawnerFrame.Visible = false
-end)
-spawnerTabBtn.MouseButton1Click:Connect(function()
-	duplicateFrame.Visible = false
-	spawnerFrame.Visible = true
-	petSpawnerFrame.Visible = false
-end)
-petSpawnerTabBtn.MouseButton1Click:Connect(function()
-	duplicateFrame.Visible = false
-	spawnerFrame.Visible = false
-	petSpawnerFrame.Visible = true
-end)
-
--- Minimize and Exit button logic
-local isMinimized = false
-minimizeBtn.MouseButton1Click:Connect(function()
-	isMinimized = not isMinimized
-	if isMinimized then
-		main.Size = UDim2.new(0, 220, 0, 40)
-		duplicateFrame.Visible = false
-		spawnerFrame.Visible = false
-		petSpawnerFrame.Visible = false
+	local petModel = ReplicatedStorage:FindFirstChild("Pet_Models") and ReplicatedStorage.Pet_Models:FindFirstChild(petName)
+	if petModel then
+		local petClone = petModel:Clone()
+		petClone:SetAttribute("Weight", petWeight)
+		petClone:SetAttribute("Age", petAge)
+		petClone.Parent = workspace
+		petClone:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * CFrame.new(3,0,0))
 	else
-		main.Size = UDim2.new(0, 220, 0, 300)
-		-- Show currently active tab's frame again
-		if duplicateFrame.Visible then
-			duplicateFrame.Visible = true
-		elseif spawnerFrame.Visible then
-			spawnerFrame.Visible = true
-		elseif petSpawnerFrame.Visible then
-			petSpawnerFrame.Visible = true
-		else
-			duplicateFrame.Visible = true
-		end
+		warn("Pet model not found: " .. petName)
 	end
 end)
 
+-- Tabs Button Logic
+local function showFrame(frame)
+	duplicateFrame.Visible = false
+	spawnerFrame.Visible = false
+	petSpawnerFrame.Visible = false
+	frame.Visible = true
+end
+
+duplicateTabBtn.MouseButton1Click:Connect(function()
+	showFrame(duplicateFrame)
+end)
+
+spawnerTabBtn.MouseButton1Click:Connect(function()
+	showFrame(spawnerFrame)
+end)
+
+petSpawnerTabBtn.MouseButton1Click:Connect(function()
+	showFrame(petSpawnerFrame)
+end)
+
+-- Exit Button
 exitBtn.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
--- Make GUI draggable
-local dragging, dragInput, dragStart, startPos
+-- Minimize Button (toggles visibility)
+local minimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		main.Size = UDim2.new(0, 220, 0, 30) -- only title bar visible
+		duplicateFrame.Visible = false
+		spawnerFrame.Visible = false
+		petSpawnerFrame.Visible = false
+	else
+		main.Size = UDim2.new(0, 220, 0, 400)
+		-- restore current visible tab
+		if duplicateFrame.Visible then
+			showFrame(duplicateFrame)
+		elseif spawnerFrame.Visible then
+			showFrame(spawnerFrame)
+		elseif petSpawnerFrame.Visible then
+			showFrame(petSpawnerFrame)
+		else
+			showFrame(duplicateFrame)
+		end
+	end
+end)
+
+-- DRAGGING (PC and Mobile Touch friendly)
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
 main.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 		dragging = true
 		dragStart = input.Position
 		startPos = main.Position
+
 		input.Changed:Connect(function()
 			if input.UserInputState == Enum.UserInputState.End then
 				dragging = false
@@ -347,14 +362,13 @@ main.InputBegan:Connect(function(input)
 end)
 
 main.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement then
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 		dragInput = input
 	end
 end)
 
 UIS.InputChanged:Connect(function(input)
 	if input == dragInput and dragging then
-		local delta = input.Position - dragStart
-		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		update(input)
 	end
 end)
