@@ -1,374 +1,469 @@
+-- Enhanced Rin Hub GUI with improved functionality and error handling
 -- Services
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 -- Setup
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Remove existing GUI if it exists
+if playerGui:FindFirstChild("RinHubUI") then
+    playerGui:FindFirstChild("RinHubUI"):Destroy()
+end
+
 local gui = Instance.new("ScreenGui")
 gui.ResetOnSpawn = false
 gui.Name = "RinHubUI"
-gui.Parent = player:WaitForChild("PlayerGui")
+gui.Parent = playerGui
 
--- Theme Colors
-local darkBG = Color3.fromRGB(20, 20, 20)
-local darkInner = Color3.fromRGB(40, 40, 40)
-local darkGreen = Color3.fromRGB(34, 139, 34)
-local textColor = Color3.fromRGB(255, 255, 255)
+-- Enhanced Theme Colors
+local theme = {
+    darkBG = Color3.fromRGB(25, 25, 30),
+    darkInner = Color3.fromRGB(45, 45, 50),
+    darkGreen = Color3.fromRGB(46, 204, 113),
+    lightGreen = Color3.fromRGB(58, 230, 130),
+    textColor = Color3.fromRGB(245, 245, 245),
+    placeholderColor = Color3.fromRGB(170, 170, 170),
+    errorColor = Color3.fromRGB(231, 76, 60),
+    successColor = Color3.fromRGB(46, 204, 113)
+}
 
--- Main Frame (Height increased to 400)
+-- Utility Functions
+local function createCorner(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 8)
+    corner.Parent = parent
+    return corner
+end
+
+local function createButton(parent, text, size, position, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = size
+    btn.Position = position
+    btn.BackgroundColor3 = theme.darkGreen
+    btn.Text = text
+    btn.TextColor3 = theme.textColor
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Parent = parent
+    createCorner(btn, 6)
+    
+    -- Hover effect
+    btn.MouseEnter:Connect(function()
+        TS:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.lightGreen}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TS:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.darkGreen}):Play()
+    end)
+    
+    if callback then
+        btn.MouseButton1Click:Connect(callback)
+    end
+    
+    return btn
+end
+
+local function createTextBox(parent, placeholder, size, position)
+    local textBox = Instance.new("TextBox")
+    textBox.Size = size
+    textBox.Position = position
+    textBox.PlaceholderText = placeholder
+    textBox.TextColor3 = theme.textColor
+    textBox.BackgroundColor3 = theme.darkInner
+    textBox.PlaceholderColor3 = theme.placeholderColor
+    textBox.Font = Enum.Font.Gotham
+    textBox.TextSize = 14
+    textBox.Text = ""
+    textBox.ClearTextOnFocus = false
+    textBox.Parent = parent
+    createCorner(textBox, 6)
+    
+    -- Add border effect
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = theme.darkGreen
+    stroke.Thickness = 0
+    stroke.Parent = textBox
+    
+    textBox.Focused:Connect(function()
+        stroke.Thickness = 2
+    end)
+    textBox.FocusLost:Connect(function()
+        stroke.Thickness = 0
+    end)
+    
+    return textBox
+end
+
+local function showNotification(text, isError)
+    local notification = Instance.new("Frame")
+    notification.Size = UDim2.new(0, 250, 0, 50)
+    notification.Position = UDim2.new(1, -260, 0, 10)
+    notification.BackgroundColor3 = isError and theme.errorColor or theme.successColor
+    notification.Parent = gui
+    createCorner(notification, 8)
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = theme.textColor
+    label.TextSize = 12
+    label.Font = Enum.Font.Gotham
+    label.TextWrapped = true
+    label.Parent = notification
+    
+    -- Slide in animation
+    notification.Position = UDim2.new(1, 10, 0, 10)
+    TS:Create(notification, TweenInfo.new(0.3), {Position = UDim2.new(1, -260, 0, 10)}):Play()
+    
+    -- Auto-hide after 3 seconds
+    wait(3)
+    TS:Create(notification, TweenInfo.new(0.3), {Position = UDim2.new(1, 10, 0, 10)}):Play()
+    wait(0.3)
+    notification:Destroy()
+end
+
+-- Main Frame
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 220, 0, 400)
-main.Position = UDim2.new(0.5, -110, 0.5, -200)
-main.BackgroundColor3 = darkBG
+main.Size = UDim2.new(0, 240, 0, 420)
+main.Position = UDim2.new(0.5, -120, 0.5, -210)
+main.BackgroundColor3 = theme.darkBG
 main.BorderSizePixel = 0
 main.Parent = gui
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+createCorner(main, 12)
+
+-- Add shadow effect
+local shadow = Instance.new("ImageLabel")
+shadow.Image = "rbxasset://textures/ui/InGameMenu/DropShadow.png"
+shadow.ImageTransparency = 0.3
+shadow.Size = UDim2.new(1, 6, 1, 6)
+shadow.Position = UDim2.new(0, -3, 0, -3)
+shadow.ZIndex = main.ZIndex - 1
+shadow.Parent = main
 
 -- Title Bar
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 30)
+titleBar.Size = UDim2.new(1, 0, 0, 35)
 titleBar.BackgroundTransparency = 1
 titleBar.Parent = main
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -60, 1, 0)
-title.Position = UDim2.new(0, 10, 0, 0)
+title.Size = UDim2.new(1, -70, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "Rin Hub"
-title.TextColor3 = textColor
-title.TextSize = 16
+title.Text = "🌟 Rin Hub"
+title.TextColor3 = theme.textColor
+title.TextSize = 18
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = titleBar
 
--- Minimize Button
-local minimizeBtn = Instance.new("TextButton")
-minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
-minimizeBtn.Position = UDim2.new(1, -55, 0, 2)
-minimizeBtn.AnchorPoint = Vector2.new(1, 0)
-minimizeBtn.BackgroundColor3 = darkGreen
-minimizeBtn.TextColor3 = textColor
-minimizeBtn.Text = "_"
-minimizeBtn.Font = Enum.Font.GothamBold
-minimizeBtn.TextSize = 18
-minimizeBtn.Parent = titleBar
-Instance.new("UICorner", minimizeBtn).CornerRadius = UDim.new(0, 6)
-
--- Exit Button
-local exitBtn = Instance.new("TextButton")
-exitBtn.Size = UDim2.new(0, 25, 0, 25)
-exitBtn.Position = UDim2.new(1, -25, 0, 2)
-exitBtn.AnchorPoint = Vector2.new(1, 0)
-exitBtn.BackgroundColor3 = darkGreen
-exitBtn.TextColor3 = textColor
-exitBtn.Text = "X"
-exitBtn.Font = Enum.Font.GothamBold
-exitBtn.TextSize = 14
-exitBtn.Parent = titleBar
-Instance.new("UICorner", exitBtn).CornerRadius = UDim.new(0, 6)
+-- Control Buttons
+local minimizeBtn = createButton(titleBar, "─", UDim2.new(0, 28, 0, 28), UDim2.new(1, -65, 0, 3))
+local exitBtn = createButton(titleBar, "✕", UDim2.new(0, 28, 0, 28), UDim2.new(1, -32, 0, 3))
 
 -- Tabs Holder
 local tabHolder = Instance.new("Frame")
-tabHolder.Size = UDim2.new(1, -20, 0, 30)
-tabHolder.Position = UDim2.new(0, 10, 0, 35)
+tabHolder.Size = UDim2.new(1, -20, 0, 35)
+tabHolder.Position = UDim2.new(0, 10, 0, 40)
 tabHolder.BackgroundTransparency = 1
 tabHolder.Parent = main
 
-local duplicateTabBtn = Instance.new("TextButton")
-duplicateTabBtn.Size = UDim2.new(1/3, -7, 1, 0)
-duplicateTabBtn.Position = UDim2.new(0, 0, 0, 0)
-duplicateTabBtn.BackgroundColor3 = darkGreen
-duplicateTabBtn.Text = "Duplicate"
-duplicateTabBtn.Font = Enum.Font.GothamBold
-duplicateTabBtn.TextColor3 = textColor
-duplicateTabBtn.TextSize = 14
-duplicateTabBtn.Parent = tabHolder
-Instance.new("UICorner", duplicateTabBtn).CornerRadius = UDim.new(0, 6)
+-- Tab Buttons
+local tabs = {"Duplicate", "Spawner", "Pet Spawner"}
+local tabButtons = {}
+local tabFrames = {}
 
-local spawnerTabBtn = Instance.new("TextButton")
-spawnerTabBtn.Size = UDim2.new(1/3, -7, 1, 0)
-spawnerTabBtn.Position = UDim2.new(1/3, 5, 0, 0)
-spawnerTabBtn.BackgroundColor3 = darkGreen
-spawnerTabBtn.Text = "Spawner"
-spawnerTabBtn.Font = Enum.Font.GothamBold
-spawnerTabBtn.TextColor3 = textColor
-spawnerTabBtn.TextSize = 14
-spawnerTabBtn.Parent = tabHolder
-Instance.new("UICorner", spawnerTabBtn).CornerRadius = UDim.new(0, 6)
-
-local petSpawnerTabBtn = Instance.new("TextButton")
-petSpawnerTabBtn.Size = UDim2.new(1/3, -7, 1, 0)
-petSpawnerTabBtn.Position = UDim2.new(2/3, 10, 0, 0)
-petSpawnerTabBtn.BackgroundColor3 = darkGreen
-petSpawnerTabBtn.Text = "Pet Spawner"
-petSpawnerTabBtn.Font = Enum.Font.GothamBold
-petSpawnerTabBtn.TextColor3 = textColor
-petSpawnerTabBtn.TextSize = 14
-petSpawnerTabBtn.Parent = tabHolder
-Instance.new("UICorner", petSpawnerTabBtn).CornerRadius = UDim.new(0, 6)
-
--- Content Frames (Height increased to 300)
-local duplicateFrame = Instance.new("Frame")
-duplicateFrame.Size = UDim2.new(1, -20, 0, 300)
-duplicateFrame.Position = UDim2.new(0, 10, 0, 70)
-duplicateFrame.BackgroundColor3 = darkInner
-duplicateFrame.Visible = true
-duplicateFrame.Parent = main
-Instance.new("UICorner", duplicateFrame).CornerRadius = UDim.new(0, 6)
-
-local spawnerFrame = duplicateFrame:Clone()
-spawnerFrame.Visible = false
-spawnerFrame.Parent = main
-
-local petSpawnerFrame = duplicateFrame:Clone()
-petSpawnerFrame.Visible = false
-petSpawnerFrame.Parent = main
-
--- Duplicate Button
-local duplicateBtn = Instance.new("TextButton")
-duplicateBtn.Size = UDim2.new(1, -20, 0, 40)
-duplicateBtn.Position = UDim2.new(0, 10, 0, 10)
-duplicateBtn.BackgroundColor3 = darkGreen
-duplicateBtn.Text = "Duplicate Equipped Tool"
-duplicateBtn.TextColor3 = textColor
-duplicateBtn.Font = Enum.Font.GothamBold
-duplicateBtn.TextSize = 14
-duplicateBtn.Parent = duplicateFrame
-Instance.new("UICorner", duplicateBtn).CornerRadius = UDim.new(0, 6)
-
-duplicateBtn.MouseButton1Click:Connect(function()
-	local character = player.Character
-	if character then
-		local tool = character:FindFirstChildOfClass("Tool")
-		if tool and not tostring(tool):match("Seed") then
-			local clone = tool:Clone()
-			clone.Parent = player.Backpack
-		end
-	end
-end)
-
--- Spawner UI
-local seedInput = Instance.new("TextBox")
-seedInput.Size = UDim2.new(1, -20, 0, 30)
-seedInput.Position = UDim2.new(0, 10, 0, 10)
-seedInput.PlaceholderText = "Enter Seed Name"
-seedInput.TextColor3 = textColor
-seedInput.BackgroundColor3 = darkInner
-seedInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
-seedInput.Font = Enum.Font.Gotham
-seedInput.TextSize = 14
-seedInput.Text = ""
-seedInput.ClearTextOnFocus = false
-seedInput.Parent = spawnerFrame
-Instance.new("UICorner", seedInput).CornerRadius = UDim.new(0, 6)
-
-local spawnBtn = Instance.new("TextButton")
-spawnBtn.Size = UDim2.new(1, -20, 0, 40)
-spawnBtn.Position = UDim2.new(0, 10, 0, 50)
-spawnBtn.BackgroundColor3 = darkGreen
-spawnBtn.Text = "Spawn Seed"
-spawnBtn.TextColor3 = textColor
-spawnBtn.Font = Enum.Font.GothamBold
-spawnBtn.TextSize = 14
-spawnBtn.Parent = spawnerFrame
-Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 6)
-
-spawnBtn.MouseButton1Click:Connect(function()
-	local seedName = seedInput.Text
-	if seedName == "" then return end
-
-	local seedDataModule = ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild("SeedData")
-	if not seedDataModule then warn("SeedData not found") return end
-
-	local seedData = require(seedDataModule)[seedName]
-	if not seedData then warn("Seed not found: "..seedName) return end
-
-	local backpack = player:WaitForChild("Backpack")
-	for _, tool in pairs(backpack:GetChildren()) do
-		if tool:IsA("Tool") and tool:GetAttribute("SeedName") == seedName then
-			local qty = tool:GetAttribute("Quantity") or 1
-			tool:SetAttribute("Quantity", qty + 1)
-			tool.Name = seedData.SeedName .. " [X" .. (qty + 1) .. "]"
-			return
-		end
-	end
-
-	local tool = Instance.new("Tool")
-	tool.Name = seedData.SeedName .. " [X1]"
-	tool:SetAttribute("ItemType", "Holdable")
-	tool:SetAttribute("SeedName", seedName)
-	tool:SetAttribute("Quantity", 1)
-
-	local seedModel = ReplicatedStorage:FindFirstChild("Seed_Models") and ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
-	if seedModel then
-		local handle = seedModel:Clone()
-		handle.Name = "Handle"
-		handle.Parent = tool
-	else
-		warn("Seed model not found: " .. seedName)
-		return
-	end
-
-	tool.Parent = backpack
-end)
-
--- Pet Spawner UI
-local petNameInput = Instance.new("TextBox")
-petNameInput.Size = UDim2.new(1, -20, 0, 30)
-petNameInput.Position = UDim2.new(0, 10, 0, 10)
-petNameInput.PlaceholderText = "Enter Pet Name"
-petNameInput.TextColor3 = textColor
-petNameInput.BackgroundColor3 = darkInner
-petNameInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
-petNameInput.Font = Enum.Font.Gotham
-petNameInput.TextSize = 14
-petNameInput.Text = ""
-petNameInput.ClearTextOnFocus = false
-petNameInput.Parent = petSpawnerFrame
-Instance.new("UICorner", petNameInput).CornerRadius = UDim.new(0, 6)
-
-local petWeightInput = Instance.new("TextBox")
-petWeightInput.Size = UDim2.new(1, -20, 0, 30)
-petWeightInput.Position = UDim2.new(0, 10, 0, 50)
-petWeightInput.PlaceholderText = "Enter Pet Weight"
-petWeightInput.TextColor3 = textColor
-petWeightInput.BackgroundColor3 = darkInner
-petWeightInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
-petWeightInput.Font = Enum.Font.Gotham
-petWeightInput.TextSize = 14
-petWeightInput.Text = ""
-petWeightInput.ClearTextOnFocus = false
-petWeightInput.Parent = petSpawnerFrame
-Instance.new("UICorner", petWeightInput).CornerRadius = UDim.new(0, 6)
-
-local petAgeInput = Instance.new("TextBox")
-petAgeInput.Size = UDim2.new(1, -20, 0, 30)
-petAgeInput.Position = UDim2.new(0, 10, 0, 90)
-petAgeInput.PlaceholderText = "Enter Pet Age"
-petAgeInput.TextColor3 = textColor
-petAgeInput.BackgroundColor3 = darkInner
-petAgeInput.PlaceholderColor3 = Color3.fromRGB(150,150,150)
-petAgeInput.Font = Enum.Font.Gotham
-petAgeInput.TextSize = 14
-petAgeInput.Text = ""
-petAgeInput.ClearTextOnFocus = false
-petAgeInput.Parent = petSpawnerFrame
-Instance.new("UICorner", petAgeInput).CornerRadius = UDim.new(0, 6)
-
-local spawnPetBtn = Instance.new("TextButton")
-spawnPetBtn.Size = UDim2.new(1, -20, 0, 40)
-spawnPetBtn.Position = UDim2.new(0, 10, 0, 140)
-spawnPetBtn.BackgroundColor3 = darkGreen
-spawnPetBtn.Text = "Spawn Pet"
-spawnPetBtn.TextColor3 = textColor
-spawnPetBtn.Font = Enum.Font.GothamBold
-spawnPetBtn.TextSize = 14
-spawnPetBtn.Parent = petSpawnerFrame
-Instance.new("UICorner", spawnPetBtn).CornerRadius = UDim.new(0, 6)
-
-spawnPetBtn.MouseButton1Click:Connect(function()
-	local petName = petNameInput.Text
-	local petWeight = tonumber(petWeightInput.Text)
-	local petAge = tonumber(petAgeInput.Text)
-	if not petName or petName == "" or not petWeight or not petAge then
-		warn("Invalid pet info")
-		return
-	end
-
-	local petModel = ReplicatedStorage:FindFirstChild("Pet_Models") and ReplicatedStorage.Pet_Models:FindFirstChild(petName)
-	if petModel then
-		local petClone = petModel:Clone()
-		petClone:SetAttribute("Weight", petWeight)
-		petClone:SetAttribute("Age", petAge)
-		petClone.Parent = workspace
-		petClone:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * CFrame.new(3,0,0))
-	else
-		warn("Pet model not found: " .. petName)
-	end
-end)
-
--- Tabs Button Logic
-local function showFrame(frame)
-	duplicateFrame.Visible = false
-	spawnerFrame.Visible = false
-	petSpawnerFrame.Visible = false
-	frame.Visible = true
+for i, tabName in ipairs(tabs) do
+    local btn = createButton(tabHolder, tabName, 
+        UDim2.new(1/3, -5, 1, 0), 
+        UDim2.new((i-1)/3, (i-1)*2.5, 0, 0)
+    )
+    tabButtons[tabName] = btn
 end
 
-duplicateTabBtn.MouseButton1Click:Connect(function()
-	showFrame(duplicateFrame)
-end)
+-- Content Area
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -20, 0, 320)
+contentFrame.Position = UDim2.new(0, 10, 0, 80)
+contentFrame.BackgroundColor3 = theme.darkInner
+contentFrame.Parent = main
+createCorner(contentFrame, 8)
 
-spawnerTabBtn.MouseButton1Click:Connect(function()
-	showFrame(spawnerFrame)
-end)
+-- Create individual tab frames
+for _, tabName in ipairs(tabs) do
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -20, 1, -20)
+    frame.Position = UDim2.new(0, 10, 0, 10)
+    frame.BackgroundTransparency = 1
+    frame.Visible = false
+    frame.Parent = contentFrame
+    tabFrames[tabName] = frame
+end
 
-petSpawnerTabBtn.MouseButton1Click:Connect(function()
-	showFrame(petSpawnerFrame)
-end)
+-- Tab switching logic
+local currentTab = "Duplicate"
+local function switchTab(tabName)
+    -- Hide all frames
+    for _, frame in pairs(tabFrames) do
+        frame.Visible = false
+    end
+    
+    -- Reset all button colors
+    for _, btn in pairs(tabButtons) do
+        btn.BackgroundColor3 = theme.darkGreen
+    end
+    
+    -- Show selected frame and highlight button
+    tabFrames[tabName].Visible = true
+    tabButtons[tabName].BackgroundColor3 = theme.lightGreen
+    currentTab = tabName
+end
 
--- Exit Button
-exitBtn.MouseButton1Click:Connect(function()
-	gui:Destroy()
-end)
+-- Connect tab buttons
+for tabName, btn in pairs(tabButtons) do
+    btn.MouseButton1Click:Connect(function()
+        switchTab(tabName)
+    end)
+end
 
--- Minimize Button (toggles visibility)
+-- DUPLICATE TAB CONTENT
+local duplicateFrame = tabFrames["Duplicate"]
+
+local duplicateBtn = createButton(duplicateFrame, "🔄 Duplicate Equipped Tool", 
+    UDim2.new(1, 0, 0, 45), UDim2.new(0, 0, 0, 0),
+    function()
+        local character = player.Character
+        if not character then
+            spawn(function() showNotification("Character not found!", true) end)
+            return
+        end
+        
+        local tool = character:FindFirstChildOfClass("Tool")
+        if not tool then
+            spawn(function() showNotification("No tool equipped!", true) end)
+            return
+        end
+        
+        if tostring(tool):match("Seed") then
+            spawn(function() showNotification("Cannot duplicate seeds!", true) end)
+            return
+        end
+        
+        local success, err = pcall(function()
+            local clone = tool:Clone()
+            clone.Parent = player.Backpack
+        end)
+        
+        if success then
+            spawn(function() showNotification("Tool duplicated successfully!", false) end)
+        else
+            spawn(function() showNotification("Failed to duplicate tool: " .. tostring(err), true) end)
+        end
+    end
+)
+
+local infoLabel = Instance.new("TextLabel")
+infoLabel.Size = UDim2.new(1, 0, 0, 60)
+infoLabel.Position = UDim2.new(0, 0, 0, 60)
+infoLabel.BackgroundTransparency = 1
+infoLabel.Text = "ℹ️ Equip a tool (not a seed) and click the button to duplicate it to your backpack."
+infoLabel.TextColor3 = theme.placeholderColor
+infoLabel.TextSize = 12
+infoLabel.Font = Enum.Font.Gotham
+infoLabel.TextWrapped = true
+infoLabel.Parent = duplicateFrame
+
+-- SPAWNER TAB CONTENT
+local spawnerFrame = tabFrames["Spawner"]
+
+local seedInput = createTextBox(spawnerFrame, "Enter Seed Name", UDim2.new(1, 0, 0, 35), UDim2.new(0, 0, 0, 0))
+local spawnBtn = createButton(spawnerFrame, "🌱 Spawn Seed", UDim2.new(1, 0, 0, 45), UDim2.new(0, 0, 0, 45),
+    function()
+        local seedName = seedInput.Text:gsub("^%s+", ""):gsub("%s+$", "") -- Trim whitespace
+        if seedName == "" then
+            spawn(function() showNotification("Please enter a seed name!", true) end)
+            return
+        end
+
+        local success, err = pcall(function()
+            local seedDataModule = ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild("SeedData")
+            if not seedDataModule then 
+                error("SeedData module not found")
+            end
+
+            local seedData = require(seedDataModule)[seedName]
+            if not seedData then 
+                error("Seed '" .. seedName .. "' not found in data")
+            end
+
+            local backpack = player:WaitForChild("Backpack")
+            
+            -- Check if seed already exists in backpack
+            for _, tool in pairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool:GetAttribute("SeedName") == seedName then
+                    local qty = tool:GetAttribute("Quantity") or 1
+                    tool:SetAttribute("Quantity", qty + 1)
+                    tool.Name = seedData.SeedName .. " [X" .. (qty + 1) .. "]"
+                    spawn(function() showNotification("Added 1 " .. seedName .. " (Total: " .. (qty + 1) .. ")", false) end)
+                    return
+                end
+            end
+
+            -- Create new tool
+            local tool = Instance.new("Tool")
+            tool.Name = seedData.SeedName .. " [X1]"
+            tool:SetAttribute("ItemType", "Holdable")
+            tool:SetAttribute("SeedName", seedName)
+            tool:SetAttribute("Quantity", 1)
+
+            local seedModel = ReplicatedStorage:FindFirstChild("Seed_Models") and ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
+            if seedModel then
+                local handle = seedModel:Clone()
+                handle.Name = "Handle"
+                handle.Parent = tool
+            else
+                error("Seed model '" .. seedName .. "' not found")
+            end
+
+            tool.Parent = backpack
+            spawn(function() showNotification("Spawned " .. seedName .. " successfully!", false) end)
+        end)
+        
+        if not success then
+            spawn(function() showNotification("Error: " .. tostring(err), true) end)
+        end
+    end
+)
+
+-- PET SPAWNER TAB CONTENT
+local petSpawnerFrame = tabFrames["Pet Spawner"]
+
+local petNameInput = createTextBox(petSpawnerFrame, "Enter Pet Name", UDim2.new(1, 0, 0, 35), UDim2.new(0, 0, 0, 0))
+local petWeightInput = createTextBox(petSpawnerFrame, "Enter Pet Weight", UDim2.new(1, 0, 0, 35), UDim2.new(0, 0, 0, 45))
+local petAgeInput = createTextBox(petSpawnerFrame, "Enter Pet Age", UDim2.new(1, 0, 0, 35), UDim2.new(0, 0, 0, 90))
+
+local spawnPetBtn = createButton(petSpawnerFrame, "🐾 Spawn Pet", UDim2.new(1, 0, 0, 45), UDim2.new(0, 0, 0, 140),
+    function()
+        local petName = petNameInput.Text:gsub("^%s+", ""):gsub("%s+$", "")
+        local petWeight = tonumber(petWeightInput.Text)
+        local petAge = tonumber(petAgeInput.Text)
+        
+        if petName == "" then
+            spawn(function() showNotification("Please enter a pet name!", true) end)
+            return
+        end
+        
+        if not petWeight or petWeight <= 0 then
+            spawn(function() showNotification("Please enter a valid weight!", true) end)
+            return
+        end
+        
+        if not petAge or petAge <= 0 then
+            spawn(function() showNotification("Please enter a valid age!", true) end)
+            return
+        end
+
+        local success, err = pcall(function()
+            local petModel = ReplicatedStorage:FindFirstChild("Pet_Models") and ReplicatedStorage.Pet_Models:FindFirstChild(petName)
+            if not petModel then
+                error("Pet model '" .. petName .. "' not found")
+            end
+
+            local petClone = petModel:Clone()
+            petClone:SetAttribute("Weight", petWeight)
+            petClone:SetAttribute("Age", petAge)
+            petClone.Parent = workspace
+            
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                petClone:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 0))
+            end
+            
+            spawn(function() showNotification("Spawned " .. petName .. " successfully!", false) end)
+        end)
+        
+        if not success then
+            spawn(function() showNotification("Error: " .. tostring(err), true) end)
+        end
+    end
+)
+
+-- Window Controls
 local minimized = false
 minimizeBtn.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	if minimized then
-		main.Size = UDim2.new(0, 220, 0, 30) -- only title bar visible
-		duplicateFrame.Visible = false
-		spawnerFrame.Visible = false
-		petSpawnerFrame.Visible = false
-	else
-		main.Size = UDim2.new(0, 220, 0, 400)
-		-- restore current visible tab
-		if duplicateFrame.Visible then
-			showFrame(duplicateFrame)
-		elseif spawnerFrame.Visible then
-			showFrame(spawnerFrame)
-		elseif petSpawnerFrame.Visible then
-			showFrame(petSpawnerFrame)
-		else
-			showFrame(duplicateFrame)
-		end
-	end
+    minimized = not minimized
+    local targetSize = minimized and UDim2.new(0, 240, 0, 35) or UDim2.new(0, 240, 0, 420)
+    
+    TS:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = targetSize}):Play()
+    
+    -- Hide/show content
+    contentFrame.Visible = not minimized
+    tabHolder.Visible = not minimized
 end)
 
--- DRAGGING (PC and Mobile Touch friendly)
+exitBtn.MouseButton1Click:Connect(function()
+    TS:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    
+    wait(0.3)
+    gui:Destroy()
+end)
+
+-- Enhanced Dragging System
 local dragging = false
 local dragInput, dragStart, startPos
 
-local function update(input)
-	local delta = input.Position - dragStart
-	main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    
+    -- Smooth dragging with tweening
+    TS:Create(main, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = newPos}):Play()
 end
 
-main.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = main.Position
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
 
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
 end)
 
-main.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		dragInput = input
-	end
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
 end)
 
 UIS.InputChanged:Connect(function(input)
-	if input == dragInput and dragging then
-		update(input)
-	end
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
 end)
+
+-- Initialize with first tab
+switchTab("Duplicate")
+
+-- Add entrance animation
+main.Size = UDim2.new(0, 0, 0, 0)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+TS:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+    Size = UDim2.new(0, 240, 0, 420),
+    Position = UDim2.new(0.5, -120, 0.5, -210)
+}):Play()
+
+print("🌟 Rin Hub loaded successfully!")
