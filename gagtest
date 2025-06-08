@@ -5,7 +5,7 @@ local LocalPlayer = Players.LocalPlayer
 -- Load Rayfield UI library
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
-    Name = "Pet & Seed Spawner",
+    Name = "PEPE",
     LoadingTitle = "Pepe",
     LoadingSubtitle = "Made by Pepe",
     Theme = "Default"
@@ -63,7 +63,7 @@ PetTab:CreateButton({
         end
 
         -- Create a new pet instance
-        local pet = Instance.new("Tool")  -- Create a new model for the pet
+        local pet = Instance.new("Model")  -- Create a new model for the pet
         pet.Name = petName  -- Set the name of the pet
 
         -- Set pet properties
