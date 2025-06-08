@@ -1,238 +1,487 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Pet & Seed Spawner GUI with Elegant Default Styling for Roblox
+-- Implements clean light theme, bold typography, whitespace, rounded cards, and smooth hover effects per the Default Design Guidelines
+
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Load Rayfield UI library
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-local Window = Rayfield:CreateWindow({
-    Name = "Pet & Seed Spawner",
-    LoadingTitle = "Pet & Seed Spawner",
-    LoadingSubtitle = "Made by whqtt",
-    Theme = "Default"
-})
+-- Remove existing PetSeedSpawnerGui if any to avoid duplicates
+local existingGui = PlayerGui:FindFirstChild("PetSeedSpawnerGui")
+if existingGui then
+    existingGui:Destroy()
+end
 
--- Pet Spawner Tab
-local PetTab = Window:CreateTab("Pet Spawner", 136232391555861)
-PetTab:CreateSection("Pet Spawner")
+-- Main ScreenGui container
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PetSeedSpawnerGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
 
-local petName = ""
-local petWeight = 1
-local petAge = 1
-local petQuantity = 0
-
-PetTab:CreateInput({
-    Name = "Pet Name",
-    PlaceholderText = "Raccoon",
-    CurrentValue = "",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(value)
-        petName = value
+-- Utility for smooth hover effect for buttons
+local function addHoverEffect(button)
+    local uicorner = button:FindFirstChildWhichIsA("UICorner")
+    if not uicorner then
+        uicorner = Instance.new("UICorner")
+        uicorner.CornerRadius = UDim.new(0, 8)
+        uicorner.Parent = button
     end
-})
+    local normalColor = button.BackgroundColor3
+    local hoverColor = Color3.fromRGB(30, 30, 30)
+    
+    button.MouseEnter:Connect(function()
+        button:TweenSize(UDim2.new(button.Size.X.Scale, button.Size.X.Offset * 1.05, button.Size.Y.Scale, button.Size.Y.Offset * 1.05), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        button.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        button.TextColor3 = Color3.new(1,1,1)
+    end)
+    button.MouseLeave:Connect(function()
+        button:TweenSize(UDim2.new(button.Size.X.Scale, button.Size.X.Offset / 1.05, button.Size.Y.Scale, button.Size.Y.Offset / 1.05), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        button.BackgroundColor3 = normalColor
+        button.TextColor3 = Color3.fromRGB(240, 240, 240)
+    end)
+end
 
-PetTab:CreateInput({
-    Name = "Pet Weight",
-    PlaceholderText = "1",
-    CurrentValue = "",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(value)
-        petWeight = tonumber(value) or 1
+-- Main container frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
+MainFrame.Size = UDim2.new(0, 700, 0, 520)
+MainFrame.Position = UDim2.new(0.5, -350, 0.5, -260)
+MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+MainFrame.Parent = ScreenGui
+MainFrame.ClipsDescendants = true
+MainFrame.Rotation = 0.1 -- slight rotation for subtle flair
+
+local mainUICorner = Instance.new("UICorner")
+mainUICorner.CornerRadius = UDim.new(0,12)
+mainUICorner.Parent = MainFrame
+
+local mainShadow = Instance.new("ImageLabel")
+mainShadow.Name = "Shadow"
+mainShadow.Parent = MainFrame
+mainShadow.BackgroundTransparency = 1
+mainShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+mainShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainShadow.Size = UDim2.new(1.15, 0, 1.15, 0)
+mainShadow.Image = "rbxassetid://3526241737"  -- subtle shadow mask
+mainShadow.ImageColor3 = Color3.fromRGB(0,0,0)
+mainShadow.ImageTransparency = 0.9
+mainShadow.ZIndex = 0
+
+-- Title Text
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 32, 0, 24)
+Title.Size = UDim2.new(1, -64, 0, 56)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Pet & Seed Spawner"
+Title.TextColor3 = Color3.fromRGB(25, 25, 25)
+Title.TextScaled = false
+Title.TextSize = 48
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.RichText = false
+
+-- Subtitle Text
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Name = "Subtitle"
+Subtitle.Parent = MainFrame
+Subtitle.BackgroundTransparency = 1
+Subtitle.Position = UDim2.new(0, 34, 0, 80)
+Subtitle.Size = UDim2.new(1, -68, 0, 32)
+Subtitle.Font = Enum.Font.Gotham
+Subtitle.Text = "Made by whqtt — Elegant & Modern UI"
+Subtitle.TextColor3 = Color3.fromRGB(107, 114, 128)
+Subtitle.TextScaled = false
+Subtitle.TextSize = 18
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Tab buttons container
+local TabButtonsFrame = Instance.new("Frame")
+TabButtonsFrame.Parent = MainFrame
+TabButtonsFrame.BackgroundTransparency = 1
+TabButtonsFrame.Position = UDim2.new(0, 32, 0, 124)
+TabButtonsFrame.Size = UDim2.new(1, -64, 0, 40)
+
+local tabUICorner = Instance.new("UICorner")
+tabUICorner.CornerRadius = UDim.new(0, 10)
+tabUICorner.Parent = TabButtonsFrame
+
+local tabGrid = Instance.new("UIGridLayout")
+tabGrid.Parent = TabButtonsFrame
+tabGrid.FillDirection = Enum.FillDirection.Horizontal
+tabGrid.CellSize = UDim2.new(0, 150, 1, 0)
+tabGrid.CellPadding = UDim2.new(0, 12, 0, 0)
+
+-- Create tabs button function
+local tabs = {}
+local function createTabButton(name)
+    local btn = Instance.new("TextButton")
+    btn.Name = name.."TabButton"
+    btn.Text = name
+    btn.BackgroundColor3 = Color3.fromRGB(240,240,240)
+    btn.TextColor3 = Color3.fromRGB(75, 85, 99)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 20
+    btn.AutoButtonColor = false
+    btn.Parent = TabButtonsFrame
+    btn.ClipsDescendants = true
+
+    local uicorner = Instance.new("UICorner")
+    uicorner.CornerRadius = UDim.new(0, 8)
+    uicorner.Parent = btn
+
+    addHoverEffect(btn)
+
+    return btn
+end
+
+local PetTabButton = createTabButton("Pet Spawner")
+local SeedTabButton = createTabButton("Seed Spawner")
+
+-- Container for tabs content
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.BackgroundColor3 = Color3.fromRGB(250, 250, 250)
+ContentFrame.Position = UDim2.new(0, 32, 0, 172)
+ContentFrame.Size = UDim2.new(1, -64, 1, -184)
+ContentFrame.Parent = MainFrame
+
+local contentUICorner = Instance.new("UICorner")
+contentUICorner.CornerRadius = UDim.new(0, 12)
+contentUICorner.Parent = ContentFrame
+
+-- Pet Spawner UI frame
+local PetFrame = Instance.new("Frame")
+PetFrame.Name = "PetFrame"
+PetFrame.BackgroundTransparency = 1
+PetFrame.Size = UDim2.new(1,0,1,0)
+PetFrame.Parent = ContentFrame
+
+local petLayout = Instance.new("UIListLayout")
+petLayout.Parent = PetFrame
+petLayout.SortOrder = Enum.SortOrder.LayoutOrder
+petLayout.Padding = UDim.new(0, 18)
+
+-- Pet Name Label & Input
+local PetNameLabel = Instance.new("TextLabel")
+PetNameLabel.Parent = PetFrame
+PetNameLabel.Text = "Pet Name"
+PetNameLabel.Font = Enum.Font.GothamSemibold
+PetNameLabel.TextSize = 20
+PetNameLabel.TextColor3 = Color3.fromRGB(55, 65, 81)
+PetNameLabel.BackgroundTransparency = 1
+PetNameLabel.Size = UDim2.new(1,0,0,24)
+PetNameLabel.LayoutOrder = 1
+
+local PetNameBox = Instance.new("TextBox")
+PetNameBox.Parent = PetFrame
+PetNameBox.PlaceholderText = "Raccoon"
+PetNameBox.Font = Enum.Font.Gotham
+PetNameBox.TextSize = 18
+PetNameBox.TextColor3 = Color3.fromRGB(107, 114, 128)
+PetNameBox.Size = UDim2.new(1,0,0,32)
+PetNameBox.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+PetNameBox.ClearTextOnFocus = false
+PetNameBox.AutomaticSize = Enum.AutomaticSize.None
+PetNameBox.AnchorPoint = Vector2.new(0, 0)
+PetNameBox.TextXAlignment = Enum.TextXAlignment.Left
+
+local petWeight, petAge, petName = 1,1,""
+
+-- Pet Weight Label & Input
+local PetWeightLabel = Instance.new("TextLabel")
+PetWeightLabel.Parent = PetFrame
+PetWeightLabel.Text = "Pet Weight"
+PetWeightLabel.Font = Enum.Font.GothamSemibold
+PetWeightLabel.TextSize = 20
+PetWeightLabel.TextColor3 = Color3.fromRGB(55, 65, 81)
+PetWeightLabel.BackgroundTransparency = 1
+PetWeightLabel.Size = UDim2.new(1,0,0,24)
+PetWeightLabel.LayoutOrder = 3
+
+local PetWeightBox = Instance.new("TextBox")
+PetWeightBox.Parent = PetFrame
+PetWeightBox.PlaceholderText = "1"
+PetWeightBox.Font = Enum.Font.Gotham
+PetWeightBox.TextSize = 18
+PetWeightBox.TextColor3 = Color3.fromRGB(107, 114, 128)
+PetWeightBox.Size = UDim2.new(1,0,0,32)
+PetWeightBox.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+PetWeightBox.ClearTextOnFocus = false
+PetWeightBox.AutomaticSize = Enum.AutomaticSize.None
+
+-- Pet Age Label & Input
+local PetAgeLabel = Instance.new("TextLabel")
+PetAgeLabel.Parent = PetFrame
+PetAgeLabel.Text = "Pet Age"
+PetAgeLabel.Font = Enum.Font.GothamSemibold
+PetAgeLabel.TextSize = 20
+PetAgeLabel.TextColor3 = Color3.fromRGB(55, 65, 81)
+PetAgeLabel.BackgroundTransparency = 1
+PetAgeLabel.Size = UDim2.new(1,0,0,24)
+PetAgeLabel.LayoutOrder = 5
+
+local PetAgeBox = Instance.new("TextBox")
+PetAgeBox.Parent = PetFrame
+PetAgeBox.PlaceholderText = "1"
+PetAgeBox.Font = Enum.Font.Gotham
+PetAgeBox.TextSize = 18
+PetAgeBox.TextColor3 = Color3.fromRGB(107, 114, 128)
+PetAgeBox.Size = UDim2.new(1,0,0,32)
+PetAgeBox.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+PetAgeBox.ClearTextOnFocus = false
+PetAgeBox.AutomaticSize = Enum.AutomaticSize.None
+
+-- Pet Spawn Button
+local PetSpawnButton = Instance.new("TextButton")
+PetSpawnButton.Parent = PetFrame
+PetSpawnButton.Text = "Spawn Pet"
+PetSpawnButton.Font = Enum.Font.GothamSemibold
+PetSpawnButton.TextSize = 24
+PetSpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+PetSpawnButton.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+PetSpawnButton.Size = UDim2.new(1,0,0,48)
+PetSpawnButton.AnchorPoint = Vector2.new(0, 0)
+PetSpawnButton.AutoButtonColor = false
+
+local petButtonCorner = Instance.new("UICorner")
+petButtonCorner.CornerRadius = UDim.new(0, 10)
+petButtonCorner.Parent = PetSpawnButton
+
+addHoverEffect(PetSpawnButton)
+
+-- Seed Spawner UI frame
+local SeedFrame = Instance.new("Frame")
+SeedFrame.Name = "SeedFrame"
+SeedFrame.BackgroundTransparency = 1
+SeedFrame.Size = UDim2.new(1,0,1,0)
+SeedFrame.Visible = false
+SeedFrame.Parent = ContentFrame
+
+local seedLayout = Instance.new("UIListLayout")
+seedLayout.Parent = SeedFrame
+seedLayout.SortOrder = Enum.SortOrder.LayoutOrder
+seedLayout.Padding = UDim.new(0, 18)
+
+-- Seed Name Label & Input
+local SeedNameLabel = Instance.new("TextLabel")
+SeedNameLabel.Parent = SeedFrame
+SeedNameLabel.Text = "Seed Name"
+SeedNameLabel.Font = Enum.Font.GothamSemibold
+SeedNameLabel.TextSize = 20
+SeedNameLabel.TextColor3 = Color3.fromRGB(55, 65, 81)
+SeedNameLabel.BackgroundTransparency = 1
+SeedNameLabel.Size = UDim2.new(1,0,0,24)
+SeedNameLabel.LayoutOrder = 1
+
+local SeedNameBox = Instance.new("TextBox")
+SeedNameBox.Parent = SeedFrame
+SeedNameBox.PlaceholderText = "Carrot"
+SeedNameBox.Font = Enum.Font.Gotham
+SeedNameBox.TextSize = 18
+SeedNameBox.TextColor3 = Color3.fromRGB(107, 114, 128)
+SeedNameBox.Size = UDim2.new(1,0,0,32)
+SeedNameBox.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+SeedNameBox.ClearTextOnFocus = false
+SeedNameBox.AutomaticSize = Enum.AutomaticSize.None
+
+-- Seed Spawn Button
+local SeedSpawnButton = Instance.new("TextButton")
+SeedSpawnButton.Parent = SeedFrame
+SeedSpawnButton.Text = "Spawn Seed"
+SeedSpawnButton.Font = Enum.Font.GothamSemibold
+SeedSpawnButton.TextSize = 24
+SeedSpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SeedSpawnButton.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+SeedSpawnButton.Size = UDim2.new(1,0,0,48)
+SeedSpawnButton.AnchorPoint = Vector2.new(0, 0)
+SeedSpawnButton.AutoButtonColor = false
+
+local seedButtonCorner = Instance.new("UICorner")
+seedButtonCorner.CornerRadius = UDim.new(0, 10)
+seedButtonCorner.Parent = SeedSpawnButton
+
+addHoverEffect(SeedSpawnButton)
+
+-- Tab switching logic
+local function showPetTab()
+    PetFrame.Visible = true
+    SeedFrame.Visible = false
+    PetTabButton.TextColor3 = Color3.fromRGB(15, 23, 42)
+    PetTabButton.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    SeedTabButton.TextColor3 = Color3.fromRGB(107,114,128)
+    SeedTabButton.BackgroundColor3 = Color3.fromRGB(240,240,240)
+end
+
+local function showSeedTab()
+    PetFrame.Visible = false
+    SeedFrame.Visible = true
+    SeedTabButton.TextColor3 = Color3.fromRGB(15, 23, 42)
+    SeedTabButton.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    PetTabButton.TextColor3 = Color3.fromRGB(107,114,128)
+    PetTabButton.BackgroundColor3 = Color3.fromRGB(240,240,240)
+end
+
+PetTabButton.MouseButton1Click:Connect(showPetTab)
+SeedTabButton.MouseButton1Click:Connect(showSeedTab)
+showPetTab()
+
+-- Pet Spawn Logic
+PetSpawnButton.MouseButton1Click:Connect(function()
+    petName = PetNameBox.Text:lower():gsub("^%s*(.-)%s*$", "%1") -- trim spaces and force lowercase
+    local weight = tonumber(PetWeightBox.Text)
+    petWeight = weight and (weight > 0 and weight or 1) or 1
+    local age = tonumber(PetAgeBox.Text)
+    petAge = age and (age > 0 and age or 1) or 1
+
+    if petName == "" then
+        warn("[PetSpawner] Please enter a valid pet name")
+        return
     end
-})
 
-PetTab:CreateInput({
-    Name = "Pet Age",
-    PlaceholderText = "1",
-    CurrentValue = "",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(value)
-        petAge = tonumber(value) or 1
+    local success, petList = pcall(function()
+        return require(ReplicatedStorage.Data.PetRegistry.PetList)
+    end)
+    if not success then
+        warn("[PetSpawner] Failed to load PetList: "..tostring(petList))
+        return
     end
-})
+    local petData = petList[petName] or petList[string.gsub(petName, "%s", "")]
+    if not petData then
+        warn("[PetSpawner] Pet not found: "..petName)
+        return
+    end
 
-PetTab:CreateButton({
-    Name = "Spawn",
-    Callback = function()
-        if not petName or petName == "" then
-            warn("[PetSpawner] Please enter a valid pet name")
-            return
-        end
+    -- Create pet tool and spawn like seed spawner
+    local petModelsFolder = ReplicatedStorage:FindFirstChild("PetModels")
+    if not petModelsFolder then
+        warn("[PetSpawner] PetModels folder not found")
+        return
+    end
 
-        local success, petList = pcall(function()
-            return require(ReplicatedStorage.Data.PetRegistry.PetList)
-        end)
+    local petModel = petModelsFolder:FindFirstChild(petName)
+    if not petModel then
+        warn("[PetSpawner] Pet model not found: "..petName)
+        return
+    end
 
-        if not success then
-            warn("[PetSpawner] Failed to load PetList: "..tostring(petList))
-            return
-        end
+    -- Create Tool
+    local petTool = Instance.new("Tool")
+    petTool.Name = petName .. " [X1]"
+    petTool:SetAttribute("ItemType", "Holdable")
+    petTool:SetAttribute("PetName", petName)
+    petTool:SetAttribute("Weight", petWeight)
+    petTool:SetAttribute("Age", petAge)
+    petTool:SetAttribute("Quantity", 1)
 
-        local petData = petList[petName]
-        if not petData then
-            warn("[PetSpawner] Pet not found: "..petName)
-            return
-        end
+    -- Clone pet model as handle
+    local petHandle = petModel:Clone()
+    petHandle.Name = "Handle"
+    petHandle.Parent = petTool
 
-        local petModelsFolder = ReplicatedStorage:FindFirstChild("Pet_Models")
-        if not petModelsFolder then
-            warn("[PetSpawner] Pet_Models folder not found in ReplicatedStorage.")
-            return
-        end
-
-        local petModel = petModelsFolder:FindFirstChild(petName)
-        if not petModel then
-            warn("[PetSpawner] Pet model not found: "..petName)
-            return
-        end
-
-        -- Increment quantity for naming
-        petQuantity = petQuantity + 1
-
-        -- Create tool for the pet, like seed spawner
-        local petTool = Instance.new("Tool")
-        petTool.Name = petName .. " [X" .. petQuantity .. "]"
-        petTool:SetAttribute("ItemType", "Holdable")
-        petTool:SetAttribute("PetName", petName)
-        petTool:SetAttribute("Weight", petWeight)
-        petTool:SetAttribute("Age", petAge)
-        petTool:SetAttribute("Quantity", petQuantity)
-
-        -- Clone the pet model to be the Handle. 
-        -- Important: Must name the cloned model or part "Handle" and it must be a single Part or Model with PrimaryPart set.
-        -- If petModel is a Model with multiple parts, ensure PrimaryPart is set in Roblox Studio or clone only the PrimaryPart.
-
-        local handleClone
-        if petModel:IsA("Model") then
-            if petModel.PrimaryPart then
-                -- Clone only the PrimaryPart to use as the handle
-                handleClone = petModel.PrimaryPart:Clone()
-            else
-                -- If no PrimaryPart, just clone the whole model but warn user - may cause tool issues
-                warn("[PetSpawner] Pet model has no PrimaryPart set, cloning entire model as handle may cause issues")
-                handleClone = petModel:Clone()
+    -- Disable collisions on pet handle
+    if petHandle:IsA("BasePart") then
+        petHandle.CanCollide = false
+    elseif petHandle:IsA("Model") then
+        for _, p in ipairs(petHandle:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.CanCollide = false
             end
-        elseif petModel:IsA("BasePart") then
-            handleClone = petModel:Clone()
-        else
-            warn("[PetSpawner] Pet model is neither Model nor Part - unsupported")
-            return
         end
+    end
 
-        if not handleClone then
-            warn("[PetSpawner] Failed to clone pet model or PrimaryPart")
-            return
-        end
-
-        handleClone.Name = "Handle"
-        handleClone.Parent = petTool
-
-        -- Optionally set CanCollide false on handle to avoid physics issues
-        if handleClone:IsA("BasePart") then
-            handleClone.CanCollide = false
-        elseif handleClone:IsA("Model") then
-            for _, part in ipairs(handleClone:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
+    petTool.Equipped:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local rightArm = character:FindFirstChild("Right Arm")
+            if rightArm then
+                local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
+                if rightGrip then
+                    rightGrip.C0 = CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
+                    rightGrip.C1 = CFrame.new(0.2, -0.4487, 0.2315, 1, 0, 0, 0, 1, 0, 0, 0, 1)
                 end
             end
         end
+    end)
 
-        -- Setup tool equipped event for grip positioning (optional)
-        petTool.Equipped:Connect(function()
-            local character = LocalPlayer.Character
-            if character then
-                local rightArm = character:FindFirstChild("Right Arm")
-                if rightArm then
-                    local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
-                    if rightGrip then
-                        rightGrip.C0 = CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
-                        rightGrip.C1 = CFrame.new(0.2, -0.448717117, 0.231557086, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-                    end
+    petTool.Parent = LocalPlayer.Backpack
+    print("[PetSpawner] Spawned pet tool:", petTool.Name)
+end)
+
+-- Seed Spawn Logic
+SeedSpawnButton.MouseButton1Click:Connect(function()
+    local seedNameInput = SeedNameBox.Text:lower():gsub("^%s*(.-)%s*$", "%1")
+    if seedNameInput == "" then
+        warn("[SeedSpawner] Please enter a valid seed name")
+        return
+    end
+
+    local seedDataList
+    local success, result = pcall(function()
+        return require(ReplicatedStorage.Data.SeedData)
+    end)
+    seedDataList = success and result or nil
+    if not seedDataList then
+        warn("[SeedSpawner] Failed to load seed data")
+        return
+    end
+
+    local seedData = seedDataList[seedNameInput] or seedDataList[string.gsub(seedNameInput, "%s", "")]
+    if not seedData then
+        warn("[SeedSpawner] Seed not found: "..seedNameInput)
+        return
+    end
+
+    local seedModelsFolder = ReplicatedStorage:FindFirstChild("Seed_Models")
+    if not seedModelsFolder then
+        warn("[SeedSpawner] Seed_Models folder not found in ReplicatedStorage.")
+        return
+    end
+
+    local seedModel = seedModelsFolder:FindFirstChild(seedNameInput)
+    if not seedModel then
+        warn("[SeedSpawner] Seed model not found: "..seedNameInput)
+        return
+    end
+
+    -- Create Tool like above
+    local seedTool = Instance.new("Tool")
+    seedTool.Name = seedData.SeedName .. " [X1]"
+    seedTool:SetAttribute("ItemType", "Holdable")
+    seedTool:SetAttribute("SeedName", seedNameInput)
+    seedTool:SetAttribute("Quantity", 1)
+
+    local seedHandle = seedModel:Clone()
+    seedHandle.Name = "Handle"
+    seedHandle.Parent = seedTool
+
+    if seedHandle:IsA("BasePart") then
+        seedHandle.CanCollide = false
+    elseif seedHandle:IsA("Model") then
+        for _, p in ipairs(seedHandle:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.CanCollide = false
+            end
+        end
+    end
+
+    seedTool.Equipped:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local rightArm = character:FindFirstChild("Right Arm")
+            if rightArm then
+                local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
+                if rightGrip then
+                    rightGrip.C0 = CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
+                    rightGrip.C1 = CFrame.new(0.2, -0.4487, 0.2315, 1, 0, 0, 0, 1, 0, 0, 0, 1)
                 end
             end
-        end)
-
-        -- Parent tool to player's backpack to make it equipable
-        petTool.Parent = LocalPlayer.Backpack
-        print("[PetSpawner] Spawned pet tool: "..petTool.Name)
-    end
-})
-
--- Seed Spawner Tab (as before)
-local SeedTab = Window:CreateTab("Seed Spawner", 111869302762063)
-SeedTab:CreateSection("Seed Spawner")
-
-local seedName = ""
-local seedQuantity = 0
-
-SeedTab:CreateInput({
-    Name = "Seed Name",
-    PlaceholderText = "Carrot",
-    CurrentValue = "",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(value)
-        seedName = value
-    end
-})
-
-SeedTab:CreateButton({
-    Name = "Spawn",
-    Callback = function()
-        if not seedName or seedName == "" then
-            warn("[SeedSpawner] Please enter a valid seed name")
-            return
         end
+    end)
 
-        local seedData = require(ReplicatedStorage.Data.SeedData)[seedName]
-        if not seedData then
-            warn("[SeedSpawner] Seed not found: "..seedName)
-            return
-        end
-
-        seedQuantity = seedQuantity + 1
-
-        local tool = Instance.new("Tool")
-        tool.Name = seedData.SeedName .. " [X" .. seedQuantity .. "]"
-        tool:SetAttribute("ItemType", "Holdable")
-        tool:SetAttribute("SeedName", seedName)
-        tool:SetAttribute("Quantity", seedQuantity)
-
-        local seedModel = ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
-        if seedModel then
-            local handle = seedModel:Clone()
-            handle.Name = "Handle"
-            handle.Parent = tool
-
-            -- Disable collisions on the handle to avoid physics glitches
-            if handle:IsA("BasePart") then
-                handle.CanCollide = false
-            elseif handle:IsA("Model") then
-                for _, part in ipairs(handle:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        else
-            warn("[SeedSpawner] Seed model not found: "..seedName)
-            return
-        end
-
-        tool.Equipped:Connect(function()
-            local character = LocalPlayer.Character
-            if character then
-                local rightArm = character:FindFirstChild("Right Arm")
-                if rightArm then
-                    local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
-                    if rightGrip then
-                        rightGrip.C0 = CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
-                        rightGrip.C1 = CFrame.new(0.2, -0.448717117, 0.231557086, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-                    end
-                end
-            end
-        end)
-
-        tool.Parent = LocalPlayer.Backpack
-        print("[SeedSpawner] Spawned seed tool: "..tool.Name)
-    end
-})
+    seedTool.Parent = LocalPlayer.Backpack
+    print("[SeedSpawner] Spawned seed tool:", seedTool.Name)
+end)
