@@ -6,8 +6,8 @@ local LocalPlayer = Players.LocalPlayer
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "Pet & Seed Spawner",
-    LoadingTitle = "Pet & Seed Spawner",
-    LoadingSubtitle = "Made by whqtt",
+    LoadingTitle = "Pepe",
+    LoadingSubtitle = "Made by Pepe",
     Theme = "Default"
 })
 
@@ -53,14 +53,17 @@ PetTab:CreateButton({
     Name = "Spawn",
     Callback = function()
         -- Access pet data from PetRegistry
-        local petData = require(ReplicatedStorage.Data.PetRegistry.PetList)[petName]
-        if not petData then
+        local success, petData = pcall(function()
+            return require(ReplicatedStorage.Data.PetRegistry.PetList)[petName]
+        end)
+
+        if not success or not petData then
             warn("Pet not found in registry: " .. petName)
             return
         end
 
         -- Create a new pet instance
-        local pet = Instance.new("Model")  -- Create a new model for the pet
+        local pet = Instance.new("Tool")  -- Create a new model for the pet
         pet.Name = petName  -- Set the name of the pet
 
         -- Set pet properties
