@@ -69,7 +69,7 @@ PetTab:CreateButton({
             petAgeAttribute.Value = petAge
 
             -- Clone the pet model from ReplicatedStorage if it exists
-            local petModel = ReplicatedStorage.PetModels:FindFirstChild(petName)  -- Corrected line
+            local petModel = ReplicatedStorage.Pet_Models:FindFirstChild(petName)  -- Corrected line
             if petModel then
                 local petClone = petModel:Clone()
                 petClone.Parent = pet  -- Set the cloned model as a child of the pet model
