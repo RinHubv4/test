@@ -8,17 +8,17 @@ local Window = Rayfield:CreateWindow({
     Name = "Pet & Seed Spawner",
     LoadingTitle = "Pet & Seed Spawner",
     LoadingSubtitle = "Made by whqtt",
-    Theme = "Default" -- Clean, elegant UI per Default Design Guidelines
+    Theme = "Default"
 })
 
 -- Pet Spawner Tab
 local PetTab = Window:CreateTab("Pet Spawner", 136232391555861)
 PetTab:CreateSection("Pet Spawner")
 
-local petName = "Raccoon"
+local petName = ""
 local petWeight = 1
 local petAge = 1
-local petQuantity = 1
+local petQuantity = 0
 
 PetTab:CreateInput({
     Name = "Pet Name",
@@ -58,34 +58,21 @@ PetTab:CreateButton({
             return
         end
 
-        -- Load pet data safely
         local success, petList = pcall(function()
             return require(ReplicatedStorage.Data.PetRegistry.PetList)
         end)
 
         if not success then
-            warn("[PetSpawner] Failed to load PetList: " .. tostring(petList))
+            warn("[PetSpawner] Failed to load PetList: "..tostring(petList))
             return
         end
 
         local petData = petList[petName]
         if not petData then
-            warn("[PetSpawner] Pet not found: " .. petName)
+            warn("[PetSpawner] Pet not found: "..petName)
             return
         end
 
-        -- Create new Tool instance for the pet, similar to seed spawning style
-        local petTool = Instance.new("Tool")
-        petQuantity = (petTool:GetAttribute("Quantity") or 0) + 1
-
-        petTool.Name = petName .. " [X" .. petQuantity .. "]"
-        petTool:SetAttribute("ItemType", "Holdable")
-        petTool:SetAttribute("PetName", petName)
-        petTool:SetAttribute("Weight", petWeight)
-        petTool:SetAttribute("Age", petAge)
-        petTool:SetAttribute("Quantity", petQuantity)
-
-        -- Clone pet model and set as handle
         local petModelsFolder = ReplicatedStorage:FindFirstChild("Pet_Models")
         if not petModelsFolder then
             warn("[PetSpawner] Pet_Models folder not found in ReplicatedStorage.")
@@ -94,21 +81,67 @@ PetTab:CreateButton({
 
         local petModel = petModelsFolder:FindFirstChild(petName)
         if not petModel then
-            warn("[PetSpawner] Pet model not found: " .. petName)
+            warn("[PetSpawner] Pet model not found: "..petName)
             return
         end
 
-        local handle = petModel:Clone()
-        handle.Name = "Handle"
-        handle.Parent = petTool
+        -- Increment quantity for naming
+        petQuantity = petQuantity + 1
 
-        -- Optional: Set handle properties if needed for better grip/appearance
+        -- Create tool for the pet, like seed spawner
+        local petTool = Instance.new("Tool")
+        petTool.Name = petName .. " [X" .. petQuantity .. "]"
+        petTool:SetAttribute("ItemType", "Holdable")
+        petTool:SetAttribute("PetName", petName)
+        petTool:SetAttribute("Weight", petWeight)
+        petTool:SetAttribute("Age", petAge)
+        petTool:SetAttribute("Quantity", petQuantity)
 
-        -- Handle tool equipped event for grip positioning on right arm
+        -- Clone the pet model to be the Handle. 
+        -- Important: Must name the cloned model or part "Handle" and it must be a single Part or Model with PrimaryPart set.
+        -- If petModel is a Model with multiple parts, ensure PrimaryPart is set in Roblox Studio or clone only the PrimaryPart.
+
+        local handleClone
+        if petModel:IsA("Model") then
+            if petModel.PrimaryPart then
+                -- Clone only the PrimaryPart to use as the handle
+                handleClone = petModel.PrimaryPart:Clone()
+            else
+                -- If no PrimaryPart, just clone the whole model but warn user - may cause tool issues
+                warn("[PetSpawner] Pet model has no PrimaryPart set, cloning entire model as handle may cause issues")
+                handleClone = petModel:Clone()
+            end
+        elseif petModel:IsA("BasePart") then
+            handleClone = petModel:Clone()
+        else
+            warn("[PetSpawner] Pet model is neither Model nor Part - unsupported")
+            return
+        end
+
+        if not handleClone then
+            warn("[PetSpawner] Failed to clone pet model or PrimaryPart")
+            return
+        end
+
+        handleClone.Name = "Handle"
+        handleClone.Parent = petTool
+
+        -- Optionally set CanCollide false on handle to avoid physics issues
+        if handleClone:IsA("BasePart") then
+            handleClone.CanCollide = false
+        elseif handleClone:IsA("Model") then
+            for _, part in ipairs(handleClone:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+
+        -- Setup tool equipped event for grip positioning (optional)
         petTool.Equipped:Connect(function()
             local character = LocalPlayer.Character
             if character then
-                local rightArm = character:WaitForChild("Right Arm", 5)
+                local rightArm = character:FindFirstChild("Right Arm")
                 if rightArm then
                     local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
                     if rightGrip then
@@ -119,19 +152,18 @@ PetTab:CreateButton({
             end
         end)
 
-        -- Parent the pet tool to player's backpack
+        -- Parent tool to player's backpack to make it equipable
         petTool.Parent = LocalPlayer.Backpack
-
-        print("[PetSpawner] Spawned pet tool: " .. petTool.Name)
+        print("[PetSpawner] Spawned pet tool: "..petTool.Name)
     end
 })
 
--- Seed Spawner Tab (unchanged, kept for consistency)
+-- Seed Spawner Tab (as before)
 local SeedTab = Window:CreateTab("Seed Spawner", 111869302762063)
 SeedTab:CreateSection("Seed Spawner")
 
 local seedName = ""
-local seedQuantity = 1
+local seedQuantity = 0
 
 SeedTab:CreateInput({
     Name = "Seed Name",
@@ -153,13 +185,13 @@ SeedTab:CreateButton({
 
         local seedData = require(ReplicatedStorage.Data.SeedData)[seedName]
         if not seedData then
-            warn("[SeedSpawner] Seed not found: " .. seedName)
+            warn("[SeedSpawner] Seed not found: "..seedName)
             return
         end
 
-        local tool = Instance.new("Tool")
-        seedQuantity = (tool:GetAttribute("Quantity") or 0) + 1
+        seedQuantity = seedQuantity + 1
 
+        local tool = Instance.new("Tool")
         tool.Name = seedData.SeedName .. " [X" .. seedQuantity .. "]"
         tool:SetAttribute("ItemType", "Holdable")
         tool:SetAttribute("SeedName", seedName)
@@ -170,15 +202,26 @@ SeedTab:CreateButton({
             local handle = seedModel:Clone()
             handle.Name = "Handle"
             handle.Parent = tool
+
+            -- Disable collisions on the handle to avoid physics glitches
+            if handle:IsA("BasePart") then
+                handle.CanCollide = false
+            elseif handle:IsA("Model") then
+                for _, part in ipairs(handle:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
         else
-            warn("[SeedSpawner] Seed model not found: " .. seedName)
+            warn("[SeedSpawner] Seed model not found: "..seedName)
             return
         end
 
         tool.Equipped:Connect(function()
             local character = LocalPlayer.Character
             if character then
-                local rightArm = character:WaitForChild("Right Arm", 5)
+                local rightArm = character:FindFirstChild("Right Arm")
                 if rightArm then
                     local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
                     if rightGrip then
@@ -190,7 +233,6 @@ SeedTab:CreateButton({
         end)
 
         tool.Parent = LocalPlayer.Backpack
-
-        print("[SeedSpawner] Spawned seed tool: " .. tool.Name)
+        print("[SeedSpawner] Spawned seed tool: "..tool.Name)
     end
 })
