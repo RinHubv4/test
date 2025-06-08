@@ -54,40 +54,47 @@ PetTab:CreateButton({
     Callback = function()
         -- Access pet data from PetRegistry
         local petData = require(ReplicatedStorage.Data.PetRegistry.PetList)[petName]
-        if petData then
-            -- Create a new pet instance
-            local pet = Instance.new("Model")  -- Create a new model for the pet
-            pet.Name = petName  -- Set the name of the pet
-
-            -- Set pet properties
-            local petWeightAttribute = Instance.new("NumberValue", pet)
-            petWeightAttribute.Name = "Weight"
-            petWeightAttribute.Value = petWeight
-
-            local petAgeAttribute = Instance.new("NumberValue", pet)
-            petAgeAttribute.Name = "Age"
-            petAgeAttribute.Value = petAge
-
-            -- Clone the pet model from ReplicatedStorage if it exists
-            local petModel = ReplicatedStorage.Pet_Models:FindFirstChild(petName)  -- Corrected line
-            if petModel then
-                local petClone = petModel:Clone()
-                petClone.Parent = pet  -- Set the cloned model as a child of the pet model
-            else
-                warn("Pet model not found: " .. petName)
-                return
-            end
-
-            -- Set the pet's position (for example, spawn it at the player's position)
-            pet:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))  -- Spawn above the player
-
-            -- Parent the pet to the workspace
-            pet.Parent = game.Workspace
-
-            print("Spawning pet: " .. petName .. ", Weight: " .. petWeight .. ", Age: " .. petAge)
-        else
-            warn("Pet not found: " .. petName)
+        if not petData then
+            warn("Pet not found in registry: " .. petName)
+            return
         end
+
+        -- Create a new pet instance
+        local pet = Instance.new("Model")  -- Create a new model for the pet
+        pet.Name = petName  -- Set the name of the pet
+
+        -- Set pet properties
+        local petWeightAttribute = Instance.new("NumberValue", pet)
+        petWeightAttribute.Name = "Weight"
+        petWeightAttribute.Value = petWeight
+
+        local petAgeAttribute = Instance.new("NumberValue", pet)
+        petAgeAttribute.Name = "Age"
+        petAgeAttribute.Value = petAge
+
+        -- Clone the pet model from ReplicatedStorage if it exists
+        local petModel = ReplicatedStorage.PetModels:FindFirstChild(petName)  -- Corrected line
+        if not petModel then
+            warn("Pet model not found in ReplicatedStorage: " .. petName)
+            return
+        end
+
+        local petClone = petModel:Clone()
+        petClone.Parent = pet  -- Set the cloned model as a child of the pet model
+
+        -- Check if the pet model has a PrimaryPart set
+        if not petClone.PrimaryPart then
+            warn("Pet model does not have a PrimaryPart set: " .. petName)
+            return
+        end
+
+        -- Set the pet's position (for example, spawn it at the player's position)
+        petClone:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))  -- Spawn above the player
+
+        -- Parent the pet to the workspace
+        pet.Parent = game.Workspace
+
+        print("Spawning pet: " .. petName .. ", Weight: " .. petWeight .. ", Age: " .. petAge)
     end
 })
 
@@ -156,4 +163,3 @@ SeedTab:CreateButton({
         print("Spawned seed: " .. seedName)
     end
 })
-
