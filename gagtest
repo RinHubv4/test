@@ -8,7 +8,7 @@ local Window = Rayfield:CreateWindow({
     Name = "Pet & Seed Spawner",
     LoadingTitle = "Pet & Seed Spawner",
     LoadingSubtitle = "Made by whqtt",
-    Theme = "Default"
+    Theme = "Default" -- Clean, elegant UI per Default Design Guidelines
 })
 
 -- Pet Spawner Tab
@@ -18,6 +18,7 @@ PetTab:CreateSection("Pet Spawner")
 local petName = "Raccoon"
 local petWeight = 1
 local petAge = 1
+local petQuantity = 1
 
 PetTab:CreateInput({
     Name = "Pet Name",
@@ -52,62 +53,85 @@ PetTab:CreateInput({
 PetTab:CreateButton({
     Name = "Spawn",
     Callback = function()
-        -- Load pet list safely
+        if not petName or petName == "" then
+            warn("[PetSpawner] Please enter a valid pet name")
+            return
+        end
+
+        -- Load pet data safely
         local success, petList = pcall(function()
             return require(ReplicatedStorage.Data.PetRegistry.PetList)
         end)
 
         if not success then
-            warn("Failed to load PetList: " .. tostring(petList))
-            return
-        end
-
-        if petName == "" then
-            warn("Pet name is empty.")
+            warn("[PetSpawner] Failed to load PetList: " .. tostring(petList))
             return
         end
 
         local petData = petList[petName]
         if not petData then
-            warn("Pet not found: " .. petName)
+            warn("[PetSpawner] Pet not found: " .. petName)
             return
         end
 
-        -- Find pet model from ReplicatedStorage (assuming similar path 'Pet_Models')
-        local petModelTemplate = ReplicatedStorage.Pet_Models:FindFirstChild(petName)
-        if not petModelTemplate then
-            warn("Pet model not found in ReplicatedStorage.Pet_Models: " .. petName)
+        -- Create new Tool instance for the pet, similar to seed spawning style
+        local petTool = Instance.new("Tool")
+        petQuantity = (petTool:GetAttribute("Quantity") or 0) + 1
+
+        petTool.Name = petName .. " [X" .. petQuantity .. "]"
+        petTool:SetAttribute("ItemType", "Holdable")
+        petTool:SetAttribute("PetName", petName)
+        petTool:SetAttribute("Weight", petWeight)
+        petTool:SetAttribute("Age", petAge)
+        petTool:SetAttribute("Quantity", petQuantity)
+
+        -- Clone pet model and set as handle
+        local petModelsFolder = ReplicatedStorage:FindFirstChild("Pet_Models")
+        if not petModelsFolder then
+            warn("[PetSpawner] Pet_Models folder not found in ReplicatedStorage.")
             return
         end
 
-        -- Clone pet model
-        local petInstance = petModelTemplate:Clone()
-        petInstance.Name = petName .. "_Spawned"
-
-        -- Set pet attributes if possible
-        if petInstance:SetAttribute then
-            petInstance:SetAttribute("Weight", petWeight)
-            petInstance:SetAttribute("Age", petAge)
+        local petModel = petModelsFolder:FindFirstChild(petName)
+        if not petModel then
+            warn("[PetSpawner] Pet model not found: " .. petName)
+            return
         end
 
-        -- Parent pet to workspace under the player's character or a dedicated folder
-        local character = LocalPlayer.Character
-        if character then
-            petInstance.Parent = workspace
-            petInstance:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame * CFrame.new(2, 0, 2))
-        else
-            petInstance.Parent = workspace
-        end
+        local handle = petModel:Clone()
+        handle.Name = "Handle"
+        handle.Parent = petTool
 
-        print("Spawned pet: " .. petName .. " with Weight: " .. petWeight .. " and Age: " .. petAge)
+        -- Optional: Set handle properties if needed for better grip/appearance
+
+        -- Handle tool equipped event for grip positioning on right arm
+        petTool.Equipped:Connect(function()
+            local character = LocalPlayer.Character
+            if character then
+                local rightArm = character:WaitForChild("Right Arm", 5)
+                if rightArm then
+                    local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
+                    if rightGrip then
+                        rightGrip.C0 = CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
+                        rightGrip.C1 = CFrame.new(0.2, -0.448717117, 0.231557086, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                    end
+                end
+            end
+        end)
+
+        -- Parent the pet tool to player's backpack
+        petTool.Parent = LocalPlayer.Backpack
+
+        print("[PetSpawner] Spawned pet tool: " .. petTool.Name)
     end
 })
 
--- Seed Spawner Tab (unchanged for brevity)
+-- Seed Spawner Tab (unchanged, kept for consistency)
 local SeedTab = Window:CreateTab("Seed Spawner", 111869302762063)
 SeedTab:CreateSection("Seed Spawner")
 
 local seedName = ""
+local seedQuantity = 1
 
 SeedTab:CreateInput({
     Name = "Seed Name",
@@ -123,21 +147,23 @@ SeedTab:CreateButton({
     Name = "Spawn",
     Callback = function()
         if not seedName or seedName == "" then
-            warn("Please enter a valid seed name")
+            warn("[SeedSpawner] Please enter a valid seed name")
             return
         end
 
         local seedData = require(ReplicatedStorage.Data.SeedData)[seedName]
         if not seedData then
-            warn("Seed not found: " .. seedName)
+            warn("[SeedSpawner] Seed not found: " .. seedName)
             return
         end
 
         local tool = Instance.new("Tool")
-        tool.Name = seedData.SeedName .. " [X" .. (tool:GetAttribute("Quantity") or 0) + 1 .. "]"
+        seedQuantity = (tool:GetAttribute("Quantity") or 0) + 1
+
+        tool.Name = seedData.SeedName .. " [X" .. seedQuantity .. "]"
         tool:SetAttribute("ItemType", "Holdable")
         tool:SetAttribute("SeedName", seedName)
-        tool:SetAttribute("Quantity", (tool:GetAttribute("Quantity") or 0) + 1)
+        tool:SetAttribute("Quantity", seedQuantity)
 
         local seedModel = ReplicatedStorage.Seed_Models:FindFirstChild(seedName)
         if seedModel then
@@ -145,21 +171,26 @@ SeedTab:CreateButton({
             handle.Name = "Handle"
             handle.Parent = tool
         else
-            warn("Seed model not found: " .. seedName)
+            warn("[SeedSpawner] Seed model not found: " .. seedName)
             return
         end
 
         tool.Equipped:Connect(function()
             local character = LocalPlayer.Character
             if character then
-                local rightArm = character:WaitForChild("Right Arm")
-                local rightGrip = rightArm:WaitForChild("RightGrip")
-                rightGrip.C0 = CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
-                rightGrip.C1 = CFrame.new(0.2, -0.448717117, 0.231557086, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                local rightArm = character:WaitForChild("Right Arm", 5)
+                if rightArm then
+                    local rightGrip = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChildWhichIsA("Motor6D")
+                    if rightGrip then
+                        rightGrip.C0 = CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
+                        rightGrip.C1 = CFrame.new(0.2, -0.448717117, 0.231557086, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                    end
+                end
             end
         end)
 
         tool.Parent = LocalPlayer.Backpack
-        print("Spawned seed: " .. seedName)
+
+        print("[SeedSpawner] Spawned seed tool: " .. tool.Name)
     end
 })
